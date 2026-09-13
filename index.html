@@ -40,6 +40,23 @@
                     BUSCAR PISO
                 </button>
             </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div class="text-3xl mb-3">🎓</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Para estudiantes</h3>
+                    <p class="text-gray-600 text-sm">Diseñado específicamente para tu estilo de vida</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div class="text-3xl mb-3">📍</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Ubicación exacta</h3>
+                    <p class="text-gray-600 text-sm">Sabe cuánto tardas realmente hasta tu uni</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div class="text-3xl mb-3">⭐</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Puntuación personal</h3>
+                    <p class="text-gray-600 text-sm">Cada piso adaptado a tus necesidades</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -86,9 +103,7 @@
                 <!-- Listings -->
                 <div class="md:col-span-3 space-y-4">
                     <p id="results-count" class="text-gray-600 font-semibold">0 alojamientos encontrados</p>
-                    <div id="listings-container" class="space-y-4">
-                        <!-- Cards generadas por JS -->
-                    </div>
+                    <div id="listings-container" class="space-y-4"></div>
                 </div>
             </div>
         </div>
@@ -157,7 +172,67 @@
             { icon: '🚇', label: '30 min', value: 'metro' }
         ];
 
-        let listings = [];
+        // --- LISTA DE PISOS CON ENLACES DIRECTOS Y ESPECÍFICOS ---
+        // Puedes añadir o modificar los enlaces de esta lista con los URLs exactos de los pisos que encuentres.
+        let listings = [
+            {
+                id: 1,
+                address: "Habitación luminosa cerca de UPV",
+                price: 380,
+                rooms: 4,
+                type: "Habitación individual",
+                barrio: "Benimaclet",
+                latitude: 39.4850,
+                longitude: -0.3250,
+                amenities: [{ label: 'WiFi' }, { label: 'Aire acondicionado' }],
+                rating: 92,
+                images: '🏠',
+                url: "https://www.idealista.com/inmueble/104859201/" // Sustituye por tu enlace exacto
+            },
+            {
+                id: 2,
+                address: "Piso completo exterior con balcón",
+                price: 850,
+                rooms: 3,
+                type: "Piso completo",
+                barrio: "Algirós",
+                latitude: 39.4780,
+                longitude: -0.3100,
+                amenities: [{ label: 'WiFi' }, { label: 'Calefacción' }],
+                rating: 88,
+                images: '🏢',
+                url: "https://www.fotocasa.es/es/alquiler/vivienda/valencia-capital/algiros/17849201/d" // Sustituye por tu enlace exacto
+            },
+            {
+                id: 3,
+                address: "Habitación para estudiantes en Blasco Ibáñez",
+                price: 400,
+                rooms: 5,
+                type: "Habitación individual",
+                barrio: "Blasco Ibáñez",
+                latitude: 39.4750,
+                longitude: -0.3750,
+                amenities: [{ label: 'WiFi' }, { label: 'Piso compartido' }],
+                rating: 95,
+                images: '🏘️',
+                url: "https://www.idealista.com/inmueble/105938271/" // Sustituye por tu enlace exacto
+            },
+            {
+                id: 4,
+                address: "Estudio moderno en el centro",
+                price: 700,
+                rooms: 1,
+                type: "Piso completo",
+                barrio: "Ruzafa",
+                latitude: 39.4650,
+                longitude: -0.3850,
+                amenities: [{ label: 'Aire acondicionado' }, { label: 'Calefacción' }],
+                rating: 85,
+                images: '🏬',
+                url: "https://www.habitaclia.com/alquiler-valencia-ruzafa/inmueble-1093821" // Sustituye por tu enlace exacto
+            }
+        ];
+
         let state = {
             selectedUniversity: 'upv',
             maxTransport: 'bus',
@@ -181,54 +256,6 @@
             const speeds = { walk: 1.3, bike: 4, bus: 2.5, metro: 3 };
             const speed = speeds[transport] || 1.3;
             return Math.ceil((distance * 60) / speed);
-        }
-
-        // Función para generar un enlace real a Idealista basado en el barrio y tipo
-        function getIdealistaLink(barrio, tipo) {
-            const barrioSlug = barrio.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
-            const isRoom = tipo.includes('Habitación');
-            const typeUrl = isRoom ? 'alquiler-habitacion' : 'alquiler-viviendas';
-            
-            // Enlace de búsqueda general en idealista para ese barrio en valencia
-            return `https://www.idealista.com/buscar/${typeUrl}/valencia-valencia/${barrioSlug}/`;
-        }
-
-        function generateListings() {
-            const data = [];
-            const types = ['Habitación individual', 'Habitación compartida', 'Piso completo'];
-            const amenities = [{ label: 'WiFi' }, { label: 'Aire acondicionado' }, { label: 'Calefacción' }, { label: 'Piso compartido' }];
-            const barrioCoords = {
-                'Benimaclet': [39.4850, -0.3250], 'Algirós': [39.4780, -0.3100], 'Amistat': [39.4900, -0.3900],
-                'Mestalla': [39.4720, -0.3400], 'Ruzafa': [39.4650, -0.3850], 'Ciutat Vella': [39.4700, -0.3800],
-                'Patraix': [39.4600, -0.3500], 'Campanar': [39.4550, -0.3600], 'Blasco Ibáñez': [39.4750, -0.3750],
-                'Ayora': [39.4850, -0.3550], 'Cabanyal': [39.4600, -0.3200], 'Camins al Grau': [39.4550, -0.3300],
-            };
-
-            let id = 1;
-            for (const barrio of BARRIOS) {
-                const count = Math.floor(Math.random() * 4) + 2;
-                for (let i = 0; i < count; i++) {
-                    const coords = barrioCoords[barrio];
-                    const selectedType = types[Math.floor(Math.random() * types.length)];
-                    
-                    data.push({
-                        id: id++,
-                        address: `${selectedType} en ${barrio}`,
-                        price: Math.floor(Math.random() * 600) + 300,
-                        rooms: Math.floor(Math.random() * 4) + 1,
-                        type: selectedType,
-                        barrio: barrio,
-                        latitude: coords[0] + (Math.random() - 0.5) * 0.01,
-                        longitude: coords[1] + (Math.random() - 0.5) * 0.01,
-                        amenities: amenities.slice(0, Math.floor(Math.random() * 3) + 2),
-                        rating: Math.floor(Math.random() * 40) + 75,
-                        images: ['🏠', '🏘️', '🏢'][Math.floor(Math.random() * 3)],
-                        // AQUÍ GENERAMOS EL ENLACE
-                        url: getIdealistaLink(barrio, selectedType) 
-                    });
-                }
-            }
-            return data;
         }
 
         function calculateScore(listing) {
@@ -259,8 +286,6 @@
         }
 
         function initApp() {
-            listings = generateListings();
-            
             const uniContainer = document.getElementById('home-uni-buttons');
             const filterUni = document.getElementById('filter-university');
             Object.entries(UNIVERSITIES).forEach(([key, uni]) => {
@@ -360,8 +385,6 @@
                                     <div>🚇 ${estimateTime(distance, 'metro')}m</div>
                                 </div>
                             </div>
-                            
-                            <!-- BOTÓN VER ANUNCIO Y SCORE -->
                             <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
                                 <div class="flex items-center gap-2">
                                     <span class="text-lg font-bold text-orange-600">⭐ ${score}/100</span>
@@ -369,11 +392,10 @@
                                 </div>
                                 <a href="${listing.url}" target="_blank" rel="noopener noreferrer" 
                                    class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
-                                    <span>Ver anuncio</span>
+                                    <span>Ver anuncio directo</span>
                                     <span class="text-xl">↗️</span>
                                 </a>
                             </div>
-
                         </div>
                     </div>
                 </div>`;
