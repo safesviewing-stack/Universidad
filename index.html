@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PisoCampus - Valencia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .view { display: none; }
+        .view.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50 pb-20 md:pb-0">
+
+    <!-- HOME VIEW -->
+    <div id="view-home" class="view active min-h-screen bg-white">
+        <div class="bg-gradient-to-b from-orange-500 to-orange-400 text-white px-4 py-16 text-center">
+            <div class="max-w-2xl mx-auto">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Encuentra piso.<br/>Vive cerca de tu universidad.</h1>
+                <p class="text-lg opacity-90 mb-8">Compara alojamientos de Valencia según precio, ubicación y tiempo hasta tu universidad.</p>
+            </div>
+        </div>
+        <div class="max-w-4xl mx-auto px-4 py-12 space-y-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">¿Dónde estudias?</h2>
+                <div id="home-uni-buttons" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                    <!-- Botones de universidades (generados por JS) -->
+                </div>
+
+                <h2 class="text-xl font-bold text-gray-900 mb-4">¿Cuánto quieres pagar máximo?</h2>
+                <div class="mb-6 space-y-2">
+                    <input type="range" id="home-price-range" min="300" max="1500" value="1000" class="w-full" oninput="updateHomePriceLabel(this.value)" />
+                    <p class="text-center text-lg font-semibold text-orange-600">
+                        300€ — <span id="home-price-label">1000</span>€/mes
+                    </p>
+                </div>
+
+                <h2 class="text-xl font-bold text-gray-900 mb-4">¿Cuánto quieres tardar?</h2>
+                <div id="home-transport-buttons" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                    <!-- Botones de transporte (generados por JS) -->
+                </div>
+
+                <button onclick="goToSearch()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg text-lg transition-colors">
+                    BUSCAR PISO
+                </button>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div class="text-3xl mb-3">🎓</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Para estudiantes</h3>
+                    <p class="text-gray-600 text-sm">Diseñado específicamente para tu estilo de vida</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div class="text-3xl mb-3">📍</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Ubicación exacta</h3>
+                    <p class="text-gray-600 text-sm">Sabe cuánto tardas realmente hasta tu uni</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div class="text-3xl mb-3">⭐</div>
+                    <h3 class="font-bold text-gray-900 mb-2">Puntuación personal</h3>
+                    <p class="text-gray-600 text-sm">Cada piso adaptado a tus necesidades</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH VIEW -->
+    <div id="view-search" class="view min-h-screen bg-gray-50">
+        <div class="bg-orange-500 text-white px-4 py-4 sticky top-0 z-10">
+            <button onclick="navigate('home')" class="flex items-center gap-2 text-lg font-semibold">
+                ← Volver
+            </button>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="grid md:grid-cols-4 gap-6">
+                <!-- Sidebar Filtros -->
+                <div class="md:col-span-1 space-y-6">
+                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                        <h3 class="font-bold text-gray-900 mb-3">Filtros</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700">Universidad</label>
+                                <select id="filter-university" class="w-full mt-1 p-2 border border-gray-200 rounded text-sm" onchange="renderListings()"></select>
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700">Precio máx: <span id="filter-price-label">1000</span>€</label>
+                                <input type="range" id="filter-price" min="300" max="1500" value="1000" class="w-full mt-1" oninput="updateFilterPrice(this.value); renderListings()" />
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700">Tipo</label>
+                                <select id="filter-type" class="w-full mt-1 p-2 border border-gray-200 rounded text-sm" onchange="renderListings()">
+                                    <option value="all">Todos</option>
+                                    <option value="Habitación individual">Habitación individual</option>
+                                    <option value="Habitación compartida">Habitación compartida</option>
+                                    <option value="Piso completo">Piso completo</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700">Barrio</label>
+                                <select id="filter-barrio" class="w-full mt-1 p-2 border border-gray-200 rounded text-sm" onchange="renderListings()">
+                                    <option value="all">Todos</option>
+                                    <!-- Options generated by JS -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Listings -->
+                <div class="md:col-span-3 space-y-4">
+                    <p id="results-count" class="text-gray-600 font-semibold">0 alojamientos encontrados</p>
+                    <div id="listings-container" class="space-y-4">
+                        <!-- Cards generadas por JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS VIEW -->
+    <div id="view-stats" class="view min-h-screen bg-gradient-to-b from-purple-50 to-white">
+        <div class="bg-purple-500 text-white px-4 py-4 sticky top-0 z-10">
+            <button onclick="navigate('home')" class="flex items-center gap-2 text-lg font-semibold">← Volver</button>
+        </div>
+        <div class="max-w-4xl mx-auto px-4 py-12">
+            <h1 class="text-3xl font-bold text-gray-900 mb-12 text-center">Valencia para estudiantes</h1>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl p-6 border border-gray-200 text-center">
+                    <div class="text-4xl mb-3">💰</div>
+                    <p class="text-gray-600 text-sm mb-2">Precio medio</p>
+                    <p class="text-3xl font-bold text-purple-600">450€</p>
+                    <p class="text-xs text-gray-500 mt-2">Habitación/mes</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 border border-gray-200 text-center">
+                    <div class="text-4xl mb-3">🏘️</div>
+                    <p class="text-gray-600 text-sm mb-2">Barrio popular</p>
+                    <p class="text-3xl font-bold text-purple-600">Benimaclet</p>
+                    <p class="text-xs text-gray-500 mt-2">Más pisos listados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVEGACIÓN BOTTOM (Móvil / Desktop) -->
+    <nav class="fixed bottom-0 md:top-0 left-0 right-0 bg-white border-t md:border-t-0 md:border-b border-gray-200 md:sticky md:z-20">
+        <div class="flex justify-around md:justify-start gap-4 px-4 py-3 max-w-4xl mx-auto">
+            <button onclick="navigate('home')" id="nav-home" class="nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-orange-600 bg-orange-50">
+                <span class="text-2xl">🏠</span>
+                <span class="text-xs font-semibold">Inicio</span>
+            </button>
+            <button onclick="navigate('search')" id="nav-search" class="nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-gray-600 hover:text-orange-600">
+                <span class="text-2xl">🔎</span>
+                <span class="text-xs font-semibold">Buscar</span>
+            </button>
+            <button onclick="navigate('stats')" id="nav-stats" class="nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-gray-600 hover:text-orange-600">
+                <span class="text-2xl">📊</span>
+                <span class="text-xs font-semibold">Datos</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // --- DATOS Y CONSTANTES ---
+        const UNIVERSITIES = {
+            upv: { name: 'UPV', full: 'Universitat Politècnica de València', lat: 39.4799, lng: -0.3436 },
+            uv: { name: 'UV', full: 'Universitat de València', lat: 39.4789, lng: -0.3844 },
+            uev: { name: 'UEV', full: 'Universidad Europea de Valencia', lat: 39.4700, lng: -0.3500 },
+            ucv: { name: 'UCV', full: 'Universidad Católica de Valencia', lat: 39.4900, lng: -0.3600 },
+            uiv: { name: 'UIV', full: 'Universidad Internacional de Valencia', lat: 39.4600, lng: -0.3400 },
+        };
+
+        const BARRIOS = [
+            'Benimaclet', 'Algirós', 'Amistat', 'Mestalla', 'Ruzafa', 'Ciutat Vella',
+            'Patraix', 'Campanar', 'Blasco Ibáñez', 'Ayora', 'Cabanyal', 'Camins al Grau'
+        ];
+
+        const TRANSPORTS = [
+            { icon: '🚶', label: '15 min', value: 'walk' },
+            { icon: '🚲', label: '15 min', value: 'bike' },
+            { icon: '🚌', label: '20 min', value: 'bus' },
+            { icon: '🚇', label: '30 min', value: 'metro' }
+        ];
+
+        // Estado Global
+        let listings = [];
+        let state = {
+            selectedUniversity: 'upv',
+            maxTransport: 'bus',
+            filters: {
+                university: 'upv',
+                maxPrice: 1000,
+                type: 'all',
+                barrio: 'all'
+            }
+        };
+
+        // --- LÓGICA CORE ---
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng/2) * Math.sin(dLng/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function estimateTime(distance, transport) {
+            const speeds = { walk: 1.3, bike: 4, bus: 2.5, metro: 3 };
+            const speed = speeds[transport] || 1.3;
+            return Math.ceil((distance * 60) / speed);
+        }
+
+        function generateListings() {
+            const data = [];
+            const types = ['Habitación individual', 'Habitación compartida', 'Piso completo'];
+            const amenities = [{ label: 'WiFi' }, { label: 'Aire acondicionado' }, { label: 'Calefacción' }, { label: 'Piso compartido' }];
+            const barrioCoords = {
+                'Benimaclet': [39.4850, -0.3250], 'Algirós': [39.4780, -0.3100], 'Amistat': [39.4900, -0.3900],
+                'Mestalla': [39.4720, -0.3400], 'Ruzafa': [39.4650, -0.3850], 'Ciutat Vella': [39.4700, -0.3800],
+                'Patraix': [39.4600, -0.3500], 'Campanar': [39.4550, -0.3600], 'Blasco Ibáñez': [39.4750, -0.3750],
+                'Ayora': [39.4850, -0.3550], 'Cabanyal': [39.4600, -0.3200], 'Camins al Grau': [39.4550, -0.3300],
+            };
+
+            let id = 1;
+            for (const barrio of BARRIOS) {
+                const count = Math.floor(Math.random() * 4) + 2;
+                for (let i = 0; i < count; i++) {
+                    const coords = barrioCoords[barrio];
+                    data.push({
+                        id: id++,
+                        address: `${types[Math.floor(Math.random() * types.length)]} en ${barrio}`,
+                        price: Math.floor(Math.random() * 600) + 300,
+                        rooms: Math.floor(Math.random() * 4) + 1,
+                        type: types[Math.floor(Math.random() * types.length)],
+                        barrio: barrio,
+                        latitude: coords[0] + (Math.random() - 0.5) * 0.01,
+                        longitude: coords[1] + (Math.random() - 0.5) * 0.01,
+                        amenities: amenities.slice(0, Math.floor(Math.random() * 3) + 2),
+                        rating: Math.floor(Math.random() * 40) + 75,
+                        images: ['🏠', '🏘️', '🏢'][Math.floor(Math.random() * 3)]
+                    });
+                }
+            }
+            return data;
+        }
+
+        function calculateScore(listing) {
+            let score = 50;
+            const uni = UNIVERSITIES[state.filters.university];
+            const distance = calculateDistance(uni.lat, uni.lng, listing.latitude, listing.longitude);
+            const time = estimateTime(distance, state.maxTransport);
+
+            score += Math.max(0, Math.min(20, 20 - (time / 2)));
+            score += Math.max(0, Math.min(15, 15 - ((listing.price - 300) / 50)));
+            score += listing.amenities.length * 2;
+            score += listing.rating / 10;
+            return Math.min(100, Math.round(score));
+        }
+
+        // --- MANIPULACIÓN DEL DOM ---
+        function navigate(viewId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+
+            // Actualizar clases de la barra de navegación
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-gray-600 hover:text-orange-600';
+            });
+            const activeBtn = document.getElementById(`nav-${viewId}`);
+            if(activeBtn) activeBtn.className = 'nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-orange-600 bg-orange-50';
+            
+            window.scrollTo(0, 0);
+            if(viewId === 'search') renderListings();
+        }
+
+        function initApp() {
+            listings = generateListings();
+            
+            // Llenar selects y botones Home
+            const uniContainer = document.getElementById('home-uni-buttons');
+            const filterUni = document.getElementById('filter-university');
+            Object.entries(UNIVERSITIES).forEach(([key, uni]) => {
+                uniContainer.innerHTML += `<button onclick="setHomeUni('${key}')" id="btn-uni-${key}" class="p-4 rounded-lg border-2 transition-all font-semibold border-gray-200 text-gray-600 hover:border-gray-300">${uni.name}</button>`;
+                filterUni.innerHTML += `<option value="${key}">${uni.name}</option>`;
+            });
+
+            const transContainer = document.getElementById('home-transport-buttons');
+            TRANSPORTS.forEach(opt => {
+                transContainer.innerHTML += `<button onclick="setHomeTransport('${opt.value}')" id="btn-trans-${opt.value}" class="p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 font-semibold border-gray-200 text-gray-600"><span class="text-2xl">${opt.icon}</span></button>`;
+            });
+
+            const filterBarrio = document.getElementById('filter-barrio');
+            BARRIOS.forEach(b => {
+                filterBarrio.innerHTML += `<option value="${b}">${b}</option>`;
+            });
+
+            updateHomeUI();
+        }
+
+        // Home View Interacciones
+        function setHomeUni(key) { state.selectedUniversity = key; updateHomeUI(); }
+        function setHomeTransport(key) { state.maxTransport = key; updateHomeUI(); }
+        function updateHomePriceLabel(val) { document.getElementById('home-price-label').innerText = val; }
+        function updateFilterPrice(val) { document.getElementById('filter-price-label').innerText = val; state.filters.maxPrice = val; }
+        
+        function updateHomeUI() {
+            Object.keys(UNIVERSITIES).forEach(k => {
+                const btn = document.getElementById(`btn-uni-${k}`);
+                if(k === state.selectedUniversity) btn.className = 'p-4 rounded-lg border-2 transition-all font-semibold border-orange-500 bg-orange-50 text-orange-700';
+                else btn.className = 'p-4 rounded-lg border-2 transition-all font-semibold border-gray-200 text-gray-600 hover:border-gray-300';
+            });
+            TRANSPORTS.forEach(t => {
+                const btn = document.getElementById(`btn-trans-${t.value}`);
+                if(t.value === state.maxTransport) btn.className = 'p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 font-semibold border-orange-500 bg-orange-50 text-orange-700';
+                else btn.className = 'p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 font-semibold border-gray-200 text-gray-600';
+            });
+        }
+
+        function goToSearch() {
+            state.filters.university = state.selectedUniversity;
+            state.filters.maxPrice = document.getElementById('home-price-range').value;
+            document.getElementById('filter-university').value = state.filters.university;
+            document.getElementById('filter-price').value = state.filters.maxPrice;
+            document.getElementById('filter-price-label').innerText = state.filters.maxPrice;
+            navigate('search');
+        }
+
+        // Renderizado de la lista
+        function renderListings() {
+            // Recoger filtros actuales del DOM
+            state.filters.university = document.getElementById('filter-university').value;
+            state.filters.type = document.getElementById('filter-type').value;
+            state.filters.barrio = document.getElementById('filter-barrio').value;
+            
+            const filtered = listings
+                .filter(l => l.price <= state.filters.maxPrice)
+                .filter(l => state.filters.type === 'all' || l.type === state.filters.type)
+                .filter(l => state.filters.barrio === 'all' || l.barrio === state.filters.barrio)
+                .sort((a, b) => calculateScore(b) - calculateScore(a));
+
+            document.getElementById('results-count').innerText = `${filtered.length} alojamientos encontrados`;
+            
+            const container = document.getElementById('listings-container');
+            container.innerHTML = '';
+            
+            const uni = UNIVERSITIES[state.filters.university];
+
+            filtered.forEach(listing => {
+                const distance = calculateDistance(uni.lat, uni.lng, listing.latitude, listing.longitude);
+                const score = calculateScore(listing);
+                const amens = listing.amenities.map(a => a.label).join(', ');
+
+                container.innerHTML += `
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                    <div class="flex flex-col md:flex-row">
+                        <div class="md:w-48 h-40 bg-gradient-to-br from-orange-200 to-orange-100 flex items-center justify-center text-6xl flex-shrink-0">
+                            ${listing.images}
+                        </div>
+                        <div class="flex-1 p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">${listing.address}</h3>
+                                    <p class="text-sm text-gray-500">${listing.barrio}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-2xl font-bold text-orange-600">${listing.price}€</p>
+                                    <p class="text-xs text-gray-500">/mes</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 my-3 text-sm text-gray-600">
+                                <span>${listing.rooms} hab</span><span>•</span><span>${amens}</span>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 my-3 text-sm">
+                                <p class="font-semibold text-gray-900 mb-2">Tiempo hasta ${uni.name}</p>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <div>🚶 ${estimateTime(distance, 'walk')}m</div>
+                                    <div>🚲 ${estimateTime(distance, 'bike')}m</div>
+                                    <div>🚌 ${estimateTime(distance, 'bus')}m</div>
+                                    <div>🚇 ${estimateTime(distance, 'metro')}m</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg font-bold text-orange-600">⭐ ${score}/100</span>
+                                <span class="text-xs text-gray-500">para ti</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // Inicializar al cargar
+        window.onload = initApp;
+    </script>
+</body>
+</html>
