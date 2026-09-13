@@ -1,680 +1,1090 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>¿A alguien más le pasa?</title>
-    
-    <!-- Fuentes de Google -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        /* ==========================================
-           VARIABLES Y DISEÑO BASE
-           ========================================== */
-        :root {
-            --primary: #6366f1; /* Indigo vibrante */
-            --primary-hover: #4f46e5;
-            --secondary: #f43f5e; /* Rojo/Rosa para "Me pasa" */
-            --bg-color: #f8fafc;
-            --surface: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --radius: 20px;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-y: scroll;
-        }
-
-        h1, h2, h3, h4, h5 { font-family: 'Outfit', sans-serif; font-weight: 800; }
-
-        /* ==========================================
-           LAYOUT PRINCIPAL (Grid de Escritorio)
-           ========================================== */
-        .app-container {
-            display: grid;
-            grid-template-columns: 260px 1fr 320px;
-            gap: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            min-height: 100vh;
-        }
-
-        /* Vistas (SPA) */
-        .view { display: none; animation: fadeIn 0.3s ease; }
-        .view.active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* ==========================================
-           NAVEGACIÓN (SIDEBAR ESCRITORIO)
-           ========================================== */
-        .sidebar { position: sticky; top: 2rem; height: calc(100vh - 4rem); display: flex; flex-direction: column; }
-        .brand { font-size: 1.5rem; color: var(--primary); margin-bottom: 2rem; line-height: 1.1; }
-        
-        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; }
-        .nav-item {
-            display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem;
-            border-radius: 14px; color: var(--text-muted); font-weight: 600;
-            text-decoration: none; cursor: pointer; transition: all 0.2s;
-            font-size: 1.1rem;
-        }
-        .nav-item:hover { background: #e0e7ff; color: var(--primary); }
-        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
-
-        .btn-publish-nav {
-            margin-top: 2rem; background: var(--primary); color: white; border: none;
-            padding: 1rem; border-radius: 100px; font-weight: 700; font-size: 1.1rem;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); transition: transform 0.2s;
-        }
-        .btn-publish-nav:hover { transform: translateY(-2px); }
-
-        /* ==========================================
-           COMPONENTE: TARJETA DE PROBLEMA (FEED)
-           ========================================== */
-        .feed-header { margin-bottom: 2rem; }
-        .feed-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .feed-header p { color: var(--text-muted); font-size: 1.1rem; }
-
-        .search-bar {
-            width: 100%; padding: 1.2rem 1.5rem; border-radius: 100px; border: 2px solid var(--border);
-            background: var(--surface); font-size: 1rem; font-family: inherit; margin: 1.5rem 0;
-            outline: none; transition: border-color 0.2s;
-        }
-        .search-bar:focus { border-color: var(--primary); }
-
-        .categories { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 1rem; scrollbar-width: none; }
-        .categories::-webkit-scrollbar { display: none; }
-        .cat-chip {
-            background: white; border: 1px solid var(--border); padding: 0.6rem 1.2rem;
-            border-radius: 100px; font-weight: 600; white-space: nowrap; cursor: pointer;
-            transition: all 0.2s; color: var(--text-muted);
-        }
-        .cat-chip:hover { border-color: var(--primary); color: var(--primary); }
-        .cat-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        .problem-card {
-            background: var(--surface); border-radius: var(--radius); padding: 1.5rem;
-            margin-bottom: 1.5rem; box-shadow: var(--shadow); cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--border);
-        }
-        .problem-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
-        
-        .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted); }
-        .card-cat { background: #f1f5f9; padding: 0.3rem 0.8rem; border-radius: 100px; font-weight: 600; color: var(--text-main); }
-        .card-hot { color: #f59e0b; font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
-
-        .card-title { font-size: 1.3rem; margin-bottom: 0.5rem; line-height: 1.4; }
-        .card-desc { color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-        .card-actions { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 1rem; }
-        .action-group { display: flex; gap: 1rem; }
-        .action-btn { 
-            display: flex; align-items: center; gap: 0.5rem; background: none; border: none; 
-            color: var(--text-muted); font-weight: 600; font-size: 1rem; cursor: pointer; 
-            font-family: inherit; transition: color 0.2s;
-        }
-        .action-btn:hover { color: var(--text-main); }
-        
-        .btn-me-too {
-            background: #ffe4e6; color: var(--secondary); padding: 0.6rem 1.2rem;
-            border-radius: 100px; font-weight: 700; border: none; cursor: pointer;
-            transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;
-        }
-        .btn-me-too:hover { background: #fda4af; }
-        .btn-me-too.clicked { background: var(--secondary); color: white; animation: pop 0.3s ease; }
-        
-        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-        /* ==========================================
-           PANEL DERECHO (TENDENCIAS)
-           ========================================== */
-        .right-panel { position: sticky; top: 2rem; height: max-content; }
-        .trending-box { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .trending-box h3 { margin-bottom: 1.5rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
-        .trend-item { display: flex; gap: 1rem; margin-bottom: 1.2rem; cursor: pointer; }
-        .trend-rank { font-weight: 900; color: var(--border); font-size: 1.5rem; font-family: 'Outfit'; }
-        .trend-info h4 { font-size: 1rem; margin-bottom: 0.2rem; }
-        .trend-info p { font-size: 0.85rem; color: var(--text-muted); }
-
-        /* ==========================================
-           PUBLICAR
-           ========================================== */
-        .publish-form { background: var(--surface); padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow); }
-        .form-group { margin-bottom: 1.5rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
-        .form-control { width: 100%; padding: 1rem; border: 2px solid var(--border); border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s; }
-        .form-control:focus { border-color: var(--primary); }
-        textarea.form-control { resize: vertical; min-height: 120px; }
-        .btn-submit { width: 100%; background: var(--primary); color: white; padding: 1.2rem; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
-        .helper-text { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 1rem; }
-
-        /* ==========================================
-           PERFIL Y GAMIFICACIÓN
-           ========================================== */
-        .profile-header { text-align: center; margin-bottom: 2rem; }
-        .avatar { width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary), #a855f7); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; }
-        .level-badge { display: inline-block; background: #fef3c7; color: #d97706; padding: 0.4rem 1rem; border-radius: 100px; font-weight: 800; font-size: 0.9rem; margin-top: 0.5rem; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
-        .stat-box { background: var(--surface); padding: 1.5rem; border-radius: 16px; text-align: center; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .stat-num { font-size: 2rem; font-weight: 900; color: var(--primary); font-family: 'Outfit'; }
-        .stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-
-        /* ==========================================
-           DETALLE DEL PROBLEMA
-           ========================================== */
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 2rem; cursor: pointer; }
-        .back-link:hover { color: var(--primary); }
-        .detail-card { background: transparent; padding: 0; box-shadow: none; border: none; margin-bottom: 3rem; pointer-events: none; }
-        .solutions-section h3 { margin-bottom: 1.5rem; font-size: 1.5rem; }
-        .solution-card { background: var(--surface); padding: 1.5rem; border-radius: 16px; margin-bottom: 1rem; border: 1px solid var(--border); display: flex; gap: 1rem; }
-        .vote-col { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
-        .vote-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: background 0.2s; }
-        .vote-btn:hover { background: #e2e8f0; }
-
-        /* ==========================================
-           MAPA (Simulación CSS)
-           ========================================== */
-        .map-container { background: #e2e8f0; border-radius: var(--radius); height: 500px; position: relative; overflow: hidden; border: 4px solid white; box-shadow: var(--shadow); }
-        .map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; background-image: radial-gradient(#94a3b8 2px, transparent 2px); background-size: 30px 30px; }
-        .map-point { position: absolute; width: 24px; height: 24px; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px rgba(255,255,255,0.8); z-index: 10;}
-        .point-red { background: #ef4444; animation: pulseRed 2s infinite; }
-        .point-orange { background: #f97316; }
-        .point-green { background: #10b981; }
-        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        
-        .map-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--text-main); color: white; padding: 1rem; border-radius: 12px; width: 200px; text-align: center; margin-bottom: 10px; display: none; z-index: 20;}
-        .map-point:hover .map-tooltip { display: block; }
-        
-        /* ==========================================
-           RESPONSIVE (Móvil)
-           ========================================== */
-        .bottom-nav { display: none; }
-
-        @media (max-width: 992px) {
-            .app-container { grid-template-columns: 1fr; padding: 1rem; padding-bottom: 6rem; }
-            .sidebar, .right-panel { display: none; }
-            
-            /* Navegación Inferior Móvil */
-            .bottom-nav {
-                display: flex; justify-content: space-around; align-items: center;
-                position: fixed; bottom: 0; left: 0; width: 100%; height: 70px;
-                background: var(--surface); box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-                z-index: 1000; border-top: 1px solid var(--border);
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-            .nav-item-mob {
-                display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
-                color: var(--text-muted); text-decoration: none; font-size: 0.75rem; font-weight: 600;
-            }
-            .nav-item-mob.active { color: var(--primary); }
-            .nav-item-mob.active .icon { background: #e0e7ff; border-radius: 12px; padding: 0.4rem 1rem; }
-            .nav-item-mob .icon { font-size: 1.4rem; transition: background 0.2s; }
-            
-            /* Botón de publicar flotante central */
-            .nav-item-mob.publish-btn-mob .icon {
-                background: var(--primary); color: white; width: 50px; height: 50px;
-                border-radius: 50%; display: flex; align-items: center; justify-content: center;
-                transform: translateY(-15px); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-                font-size: 1.8rem;
-            }
-            
-            .feed-header h1 { font-size: 1.8rem; }
-            .stats-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PisoCampus Valencia — Encuentra piso cerca de tu universidad</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'Inter', sans-serif; }
+  h1, h2, h3, .display { font-family: 'Poppins', sans-serif; }
+  body { margin: 0; background: #FAFAF8; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #E2DFD6; border-radius: 8px; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in-up { animation: fadeInUp .45s ease both; }
+  @keyframes popIn { 0% { transform: scale(0.6); opacity:0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity:1; } }
+  .pop-in { animation: popIn .35s ease both; }
+  @keyframes pulseMarker { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+  .pulse-marker { animation: pulseMarker 1.8s ease-in-out infinite; }
+  .card-hover { transition: transform .18s ease, box-shadow .18s ease; }
+  .card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20,20,10,0.10); }
+  input[type=range] { accent-color: #FF6A3D; }
+  .scrollbar-none::-webkit-scrollbar{ display:none; }
+  .scrollbar-none { -ms-overflow-style:none; scrollbar-width:none; }
+</style>
 </head>
 <body>
+<div id="root"></div>
 
-    <div class="app-container">
-        
-        <!-- SIDEBAR (Escritorio) -->
-        <aside class="sidebar">
-            <div class="brand">
-                <h1>¿A alguien<br>más le pasa?</h1>
-            </div>
-            <nav class="nav-menu">
-                <a class="nav-item active" onclick="switchView('home', this)">🏠 Inicio</a>
-                <a class="nav-item" onclick="switchView('map', this)">📍 Mapa de problemas</a>
-                <a class="nav-item" onclick="switchView('profile', this)">👤 Mi Perfil</a>
-            </nav>
-            <button class="btn-publish-nav" onclick="switchView('publish')">➕ Publicar problema</button>
-        </aside>
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useRef } = React;
 
-        <!-- ÁREA CENTRAL (Vistas dinámicas) -->
-        <main class="main-content">
-            
-            <!-- VISTA: HOME / FEED -->
-            <div id="view-home" class="view active">
-                <div class="feed-header">
-                    <h2>Cuéntanos qué te está pasando.</h2>
-                    <p>Descubre si eres el único o si media facultad sufre lo mismo.</p>
-                    
-                    <input type="text" id="searchInput" class="search-bar" placeholder="🔍 ¿Qué problema tienes? (Ej. wifi, profesor...)" oninput="filterPosts()">
-                    
-                    <div class="categories">
-                        <div class="cat-chip active" onclick="filterCategory('Todos', this)">🌐 Todos</div>
-                        <div class="cat-chip" onclick="filterCategory('Clases', this)">📚 Clases</div>
-                        <div class="cat-chip" onclick="filterCategory('Instalaciones', this)">🏫 Instalaciones</div>
-                        <div class="cat-chip" onclick="filterCategory('Tecnología', this)">💻 Tecnología</div>
-                        <div class="cat-chip" onclick="filterCategory('Profesores', this)">👨‍🏫 Profesores</div>
-                        <div class="cat-chip" onclick="filterCategory('Cafetería', this)">🍽️ Cafetería</div>
-                    </div>
-                </div>
+/* ============================= DATA ============================= */
 
-                <div id="feed-container">
-                    <!-- Los posts se inyectan aquí via JS -->
-                </div>
-            </div>
+const UNIVERSITIES = [
+  { id: 'upv-vera', short: 'UPV', name: 'Universitat Politècnica de València', campus: 'Campus de Vera', lat: 39.4817, lng: -0.3467, color: '#FF6A3D' },
+  { id: 'uv-blasco', short: 'UV', name: 'Universitat de València', campus: 'Blasco Ibáñez', lat: 39.4763, lng: -0.3630, color: '#2F6DF6' },
+  { id: 'uv-tarongers', short: 'UV', name: 'Universitat de València', campus: 'Tarongers', lat: 39.4802, lng: -0.3565, color: '#2F6DF6' },
+  { id: 'uv-burjassot', short: 'UV', name: 'Universitat de València', campus: 'Burjassot-Paterna', lat: 39.5079, lng: -0.4165, color: '#2F6DF6' },
+  { id: 'uev', short: 'UEV', name: 'Universidad Europea de Valencia', campus: 'Campus Valencia', lat: 39.4712, lng: -0.3550, color: '#9B5DE5' },
+  { id: 'ucv', short: 'UCV', name: 'Universidad Católica de Valencia', campus: 'San Vicente Mártir', lat: 39.4735, lng: -0.3735, color: '#F15BB5' },
+  { id: 'uiv', short: 'UIV', name: 'Universidad Internacional de Valencia', campus: 'Campus Digital', lat: 39.4650, lng: -0.3780, color: '#00BBA7' },
+];
+const UNI_GROUPS = [
+  { short:'UPV', label:'UPV — Politècnica', campuses:['upv-vera'] },
+  { short:'UV', label:'Universitat de València', campuses:['uv-blasco','uv-tarongers','uv-burjassot'] },
+  { short:'UEV', label:'Europea de Valencia', campuses:['uev'] },
+  { short:'UCV', label:'Católica de Valencia', campuses:['ucv'] },
+  { short:'UIV', label:'Internacional de Valencia', campuses:['uiv'] },
+];
 
-            <!-- VISTA: PUBLICAR -->
-            <div id="view-publish" class="view">
-                <div class="feed-header">
-                    <h1>¿Qué te pasa?</h1>
-                    <p>No hace falta escribir perfecto. Solo cuéntalo como se lo contarías a un amigo.</p>
-                </div>
-                
-                <div class="publish-form">
-                    <div class="form-group">
-                        <label>Categoría</label>
-                        <select id="pub-cat" class="form-control">
-                            <option>📚 Clases</option>
-                            <option>🏫 Instalaciones</option>
-                            <option>💻 Tecnología</option>
-                            <option>👨‍🏫 Profesores</option>
-                            <option>🍽️ Cafetería</option>
-                            <option>💬 Otros</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Universidad / Facultad</label>
-                        <select id="pub-uni" class="form-control">
-                            <option>Facultad de Ciencias</option>
-                            <option>Facultad de Letras</option>
-                            <option>Escuela de Ingeniería</option>
-                            <option>Facultad de Derecho</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Describe el problema</label>
-                        <textarea id="pub-desc" class="form-control" placeholder="Ej: Llevo media hora buscando aula y nadie sabe nada..."></textarea>
-                    </div>
-                    <button class="btn-submit" onclick="submitPost()">PUBLICAR</button>
-                    <p class="helper-text">Al publicar ganarás +5 puntos 🔥</p>
-                </div>
-            </div>
+const BARRIOS = [
+  { name:'Benimaclet', lat:39.4870, lng:-0.3557 },
+  { name:'Algirós', lat:39.4791, lng:-0.3512 },
+  { name:'Amistat', lat:39.4735, lng:-0.3625 },
+  { name:'Mestalla', lat:39.4770, lng:-0.3735 },
+  { name:'Ruzafa', lat:39.4590, lng:-0.3760 },
+  { name:'Ciutat Vella', lat:39.4745, lng:-0.3775 },
+  { name:'Patraix', lat:39.4610, lng:-0.3915 },
+  { name:'Campanar', lat:39.4785, lng:-0.3955 },
+  { name:'Blasco Ibáñez', lat:39.4755, lng:-0.3610 },
+  { name:'Ayora', lat:39.4830, lng:-0.3700 },
+  { name:'Cabanyal', lat:39.4685, lng:-0.3280 },
+  { name:'Camins al Grau', lat:39.4650, lng:-0.3395 },
+];
 
-            <!-- VISTA: DETALLE DEL PROBLEMA -->
-            <div id="view-detail" class="view">
-                <a class="back-link" onclick="switchView('home')">← Volver al muro</a>
-                
-                <div id="detail-post-container">
-                    <!-- El post detallado se inyecta aquí -->
-                </div>
+const AMENITIES_ALL = [
+  { key:'wifi', label:'Internet', icon:'📶' },
+  { key:'ac', label:'Aire acondicionado', icon:'❄️' },
+  { key:'furnished', label:'Amueblado', icon:'🛋️' },
+  { key:'elevator', label:'Ascensor', icon:'🛗' },
+  { key:'terrace', label:'Terraza', icon:'🌿' },
+  { key:'erasmus', label:'Erasmus friendly', icon:'🌍' },
+];
 
-                <div class="solutions-section">
-                    <h3>💡 Posibles soluciones</h3>
-                    
-                    <!-- Formulario de solución -->
-                    <div class="form-group" style="display:flex; gap:1rem; margin-bottom: 2rem;">
-                        <input type="text" id="sol-input" class="form-control" placeholder="Propón una solución o truco...">
-                        <button class="btn-submit" style="width: auto; padding: 0 2rem;" onclick="addSolution()">Enviar</button>
-                    </div>
+function seededRandom(seed) {
+  let s = seed;
+  return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+}
 
-                    <div id="solutions-container">
-                        <!-- Soluciones se inyectan aquí -->
-                    </div>
-                </div>
-            </div>
+function generateListings() {
+  const rnd = seededRandom(42);
+  const listings = [];
+  const types = ['Habitación individual', 'Habitación compartida', 'Piso completo'];
+  const photos = ['🏠','🏘️','🏢','🏡'];
+  let id = 1;
+  BARRIOS.forEach((barrio) => {
+    const count = 3 + Math.floor(rnd() * 3);
+    for (let i = 0; i < count; i++) {
+      const lat = barrio.lat + (rnd() - 0.5) * 0.012;
+      const lng = barrio.lng + (rnd() - 0.5) * 0.012;
+      const price = 320 + Math.floor(rnd() * 550);
+      const rooms = 1 + Math.floor(rnd() * 4);
+      const type = types[Math.floor(rnd() * types.length)];
+      const amenities = {};
+      AMENITIES_ALL.forEach(a => amenities[a.key] = rnd() > 0.42);
+      const nearestUni = UNIVERSITIES[Math.floor(rnd() * UNIVERSITIES.length)];
+      const minStay = [3,6,9,12][Math.floor(rnd()*4)];
+      const daysAgo = Math.floor(rnd() * 60);
+      const availableIn = Math.floor(rnd() * 45);
+      listings.push({
+        id: id++,
+        title: `${type} en ${barrio.name}`,
+        barrio: barrio.name,
+        price, rooms, type,
+        lat, lng,
+        amenities,
+        photo: photos[Math.floor(rnd()*photos.length)],
+        rating: 70 + Math.floor(rnd() * 28),
+        nearestUniId: nearestUni.id,
+        minStay,
+        utilitiesIncluded: rnd() > 0.5,
+        availableFrom: new Date(Date.now() + availableIn*86400000),
+        description: `Alojamiento de ejemplo en ${barrio.name}, pensado para estudiantes. Ambiente tranquilo, buena conexión de transporte y a un paseo de zonas con vida universitaria. (Datos ficticios de demostración.)`,
+        source: 'Demo — PisoCampus',
+      });
+    }
+  });
+  return listings;
+}
+const LISTINGS = generateListings();
 
-            <!-- VISTA: MAPA -->
-            <div id="view-map" class="view">
-                <div class="feed-header">
-                    <h1>Mapa de problemas</h1>
-                    <p>Visualiza dónde se concentran las quejas en tiempo real.</p>
-                </div>
-                
-                <div class="map-container">
-                    <div class="map-bg"></div>
-                    
-                    <!-- Puntos simulados -->
-                    <div class="map-point point-red" style="top: 30%; left: 40%;">
-                        <div class="map-tooltip"><strong>Biblioteca</strong><br>34 problemas<br><span style="font-size:0.8rem">Falta de enchufes, calor.</span></div>
-                    </div>
-                    <div class="map-point point-orange" style="top: 60%; left: 70%;">
-                        <div class="map-tooltip"><strong>Cafetería</strong><br>15 problemas<br><span style="font-size:0.8rem">Máquinas rotas, colas.</span></div>
-                    </div>
-                    <div class="map-point point-green" style="top: 20%; left: 80%;">
-                        <div class="map-tooltip"><strong>Aulario 1</strong><br>3 problemas<br><span style="font-size:0.8rem">Proyector no enciende.</span></div>
-                    </div>
-                    <div class="map-point point-red" style="top: 75%; left: 25%;">
-                        <div class="map-tooltip"><strong>Secretaría</strong><br>42 problemas<br><span style="font-size:0.8rem">Horarios, matrículas cerradas.</span></div>
-                    </div>
-                </div>
-            </div>
+/* ============================= HELPERS ============================= */
 
-            <!-- VISTA: PERFIL -->
-            <div id="view-profile" class="view">
-                <div class="profile-header">
-                    <div class="avatar">👨‍🎓</div>
-                    <h1>Luis Martínez</h1>
-                    <div class="level-badge">🕵️ Investigador</div>
-                    <p style="margin-top: 0.5rem; color: var(--text-muted); font-weight: bold;">🔥 <span id="user-points">243</span> puntos</p>
-                </div>
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLng = (lng2-lng1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function timesFor(distanceKm) {
+  return {
+    walk: Math.max(3, Math.round(distanceKm / 4.5 * 60)),
+    bike: Math.max(2, Math.round(distanceKm / 15 * 60)),
+    bus: Math.max(4, Math.round(distanceKm / 18 * 60) + 4),
+    metro: Math.max(3, Math.round(distanceKm / 28 * 60) + 3),
+  };
+}
+function bestTime(t) { return Math.min(t.walk, t.bike, t.bus, t.metro); }
+function proximityLabel(minMinutes) {
+  if (minMinutes <= 10) return { label: 'Muy cerca', color: '#1FA97D', dot:'🟢' };
+  if (minMinutes <= 20) return { label: 'Bien situado', color: '#F2A93B', dot:'🟡' };
+  return { label: 'Algo lejos', color: '#E4572E', dot:'🔴' };
+}
+function scoreListing(listing, uni, prefs) {
+  const dist = haversine(uni.lat, uni.lng, listing.lat, listing.lng);
+  const t = timesFor(dist);
+  const bt = bestTime(t);
+  const distScore = Math.max(0, 100 - bt * 2.2);
+  const priceScore = Math.max(0, 100 - Math.max(0, listing.price - 300) / 7);
+  const transportScore = Math.max(0, 100 - (Math.min(t.bus, t.metro) * 1.6));
+  const amenCount = Object.values(listing.amenities).filter(Boolean).length;
+  const featScore = Math.min(100, amenCount * 16 + listing.rating * 0.2);
+  const wDist = prefs?.wDist ?? 0.32, wPrice = prefs?.wPrice ?? 0.30, wTrans = prefs?.wTrans ?? 0.18, wFeat = prefs?.wFeat ?? 0.20;
+  const total = distScore*wDist + priceScore*wPrice + transportScore*wTrans + featScore*wFeat;
+  return {
+    total: Math.round(Math.max(0, Math.min(100, total))),
+    breakdown: {
+      price: Math.round(priceScore/10),
+      distance: Math.round(distScore/10),
+      transport: Math.round(transportScore/10),
+      features: Math.round(featScore/10),
+    },
+    times: t, bestTime: bt, distanceKm: dist,
+  };
+}
+function euro(n) { return n.toLocaleString('es-ES') + ' €'; }
+function uniById(id) { return UNIVERSITIES.find(u => u.id === id); }
 
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-num" id="user-posts">12</div>
-                        <div class="stat-label">Problemas</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-num" id="user-sols">18</div>
-                        <div class="stat-label">Soluciones</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-num" id="user-sups">64</div>
-                        <div class="stat-label">Apoyados</div>
-                    </div>
-                </div>
-                
-                <h3>🏆 Logros desbloqueados</h3>
-                <div style="display:flex; gap:1rem; margin-top:1rem; flex-wrap:wrap;">
-                    <div style="background:white; padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;"><span style="font-size:1.5rem">🎯</span> Primer problema</div>
-                    <div style="background:white; padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;"><span style="font-size:1.5rem">💡</span> Solucionador nato</div>
-                    <div style="background:white; padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;"><span style="font-size:1.5rem">👥</span> Voz del pueblo</div>
-                </div>
-            </div>
+/* ============================= MAP (SVG) ============================= */
 
-        </main>
+const MAP_BOUNDS = { minLat: 39.455, maxLat: 39.512, minLng: -0.420, maxLng: -0.322 };
+function toXY(lat, lng, w, h) {
+  const x = ((lng - MAP_BOUNDS.minLng) / (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng)) * w;
+  const y = h - ((lat - MAP_BOUNDS.minLat) / (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat)) * h;
+  return [x, y];
+}
 
-        <!-- PANEL DERECHO (Escritorio) -->
-        <aside class="right-panel">
-            <div class="trending-box">
-                <h3>🔥 Lo que más molesta</h3>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Campus Principal • Esta semana</p>
-                
-                <div id="trending-container">
-                    <!-- Se inyecta por JS -->
-                </div>
-            </div>
-        </aside>
-
+function CityMap({ listings, selectedUni, selectedListing, onSelectListing, height=420 }) {
+  const w = 700, h = height;
+  return (
+    <div className="relative w-full rounded-2xl overflow-hidden border border-stone-200 bg-[#EFF3EC]">
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full block" style={{minHeight: height}}>
+        <rect width={w} height={h} fill="#EFF3EC" />
+        {[...Array(10)].map((_,i)=>(
+          <line key={'v'+i} x1={i*w/10} y1="0" x2={i*w/10} y2={h} stroke="#DCE3D8" strokeWidth="1" />
+        ))}
+        {[...Array(7)].map((_,i)=>(
+          <line key={'h'+i} x1="0" y1={i*h/7} x2={w} y2={i*h/7} stroke="#DCE3D8" strokeWidth="1" />
+        ))}
+        {/* route line */}
+        {selectedListing && selectedUni && (() => {
+          const [x1,y1] = toXY(selectedListing.lat, selectedListing.lng, w, h);
+          const [x2,y2] = toXY(selectedUni.lat, selectedUni.lng, w, h);
+          return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#FF6A3D" strokeWidth="2.5" strokeDasharray="6 5" />;
+        })()}
+        {/* listings */}
+        {listings.map((l) => {
+          const [x,y] = toXY(l.lat, l.lng, w, h);
+          const isSel = selectedListing && selectedListing.id === l.id;
+          return (
+            <g key={l.id} transform={`translate(${x},${y})`} onClick={() => onSelectListing(l)} className="cursor-pointer">
+              <circle r={isSel ? 9 : 6} fill={isSel ? '#FF6A3D' : '#2B2B26'} stroke="white" strokeWidth="2" className={isSel ? 'pulse-marker' : ''} opacity={isSel ? 1 : 0.75} />
+            </g>
+          );
+        })}
+        {/* universities */}
+        {UNIVERSITIES.map((u) => {
+          const [x,y] = toXY(u.lat, u.lng, w, h);
+          const isSel = selectedUni && selectedUni.id === u.id;
+          return (
+            <g key={u.id} transform={`translate(${x},${y})`}>
+              <rect x={-16} y={-11} width="32" height="20" rx="6" fill={u.color} opacity={isSel ? 1 : 0.85} stroke="white" strokeWidth={isSel ? 2 : 1} />
+              <text x="0" y="4" textAnchor="middle" fontSize="9" fontWeight="700" fill="white">{u.short}</text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
+  );
+}
 
-    <!-- NAVEGACIÓN INFERIOR (Móvil) -->
-    <nav class="bottom-nav">
-        <a class="nav-item-mob active" onclick="switchView('home', this)">
-            <span class="icon">🏠</span>
-            <span>Inicio</span>
-        </a>
-        <a class="nav-item-mob" onclick="switchView('map', this)">
-            <span class="icon">📍</span>
-            <span>Mapa</span>
-        </a>
-        <a class="nav-item-mob publish-btn-mob" onclick="switchView('publish', this)">
-            <span class="icon">➕</span>
-        </a>
-        <a class="nav-item-mob" onclick="switchView('profile', this)">
-            <span class="icon">👤</span>
-            <span>Perfil</span>
-        </a>
-    </nav>
+/* ============================= SHARED UI ============================= */
 
-    <!-- ==========================================
-         LÓGICA JAVASCRIPT
-         ========================================== -->
-    <script>
-        // --- ESTADO Y DATOS DE PRUEBA ---
-        let currentCategory = 'Todos';
-        let currentPostId = null;
-        let currentUser = { points: 243, posts: 12, sols: 18, sups: 64 };
+function Badge({ children, className='' }) {
+  return <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${className}`}>{children}</span>;
+}
 
-        const posts = [
-            { id: 1, cat: '💻 Tecnología', title: 'La WiFi Eduroam no conecta nunca', desc: 'Llevo 3 días gastando mis datos porque es imposible conectarse a la red en la biblioteca central. ¿Soy el único?', meToo: 342, comments: 45, uni: 'Facultad de Ciencias', hot: true, solutions: [
-                {text: "Borra la red y vuelve a meter las credenciales con @tu.uni.edu", votes: 89},
-                {text: "Siéntate cerca de la ventana, a veces coge red de la calle 😂", votes: 12}
-            ]},
-            { id: 2, cat: '🏫 Instalaciones', title: 'No hay suficientes enchufes en la biblioteca', desc: 'Llegas a las 9 am, te sientas y oh sorpresa, el único enchufe de la mesa no funciona o ya está pillado. Misión imposible cargar el portátil.', meToo: 287, comments: 22, uni: 'Biblioteca General', hot: true, solutions: [
-                {text: "Llévate una regleta pequeña en la mochila, te haces amigo de toda la mesa.", votes: 156}
-            ]},
-            { id: 3, cat: '👨‍🏫 Profesores', title: 'El profesor cambia las fechas constantemente', desc: 'Primero el parcial era el día 15, luego el 20, ahora dice que igual lo quita y evalúa con trabajo. Nunca sé a qué atenerme.', meToo: 231, comments: 34, uni: 'Facultad de Derecho', hot: true, solutions: []},
-            { id: 4, cat: '🍽️ Cafetería', title: 'La máquina de café lleva dos semanas sin funcionar', desc: 'No pido mucho, solo un líquido caliente con cafeína para sobrevivir a la clase de las 8 am. La máquina del pasillo 3 sigue tragándose las monedas.', meToo: 184, comments: 15, uni: 'Escuela de Ingeniería', hot: false, solutions: []},
-            { id: 5, cat: '📚 Clases', title: '¿Soy el único que no entiende qué quiere el profesor en el TFG?', desc: 'Cada tutoría me dice una cosa distinta. Hago A y me pide B, hago B y me dice que por qué quité A. Socorro.', meToo: 156, comments: 28, uni: 'Facultad de Letras', hot: false, solutions: []},
-            { id: 6, cat: '🏫 Instalaciones', title: 'Hace un frío polar en el Aulario 4', desc: 'No sé si estoy en la universidad o en una expedición al Ártico. Llevo abrigo, bufanda y tiemblo en clase.', meToo: 112, comments: 8, uni: 'Aulario Sur', hot: false, solutions: []},
-            { id: 7, cat: '📚 Clases', title: 'Nunca sé cuándo abren las matrículas', desc: 'La web oficial es un laberinto. Deberían mandar un triste email diciendo "Oye, ya puedes matricularte".', meToo: 98, comments: 12, uni: 'Secretaría General', hot: false, solutions: []},
-            { id: 8, cat: '💻 Tecnología', title: 'Campus Virtual caído justo antes de la entrega', desc: 'Típico, tienes hasta las 23:59, intentas subirlo a las 23:45 y la página devuelve Error 502.', meToo: 405, comments: 88, uni: 'Toda la uni', hot: true, solutions: [
-                {text: "Mándalo por email al profe adjuntando captura del error.", votes: 230}
-            ]},
-            { id: 9, cat: '👨‍🏫 Profesores', title: 'Diapositivas llenas de texto ilegible', desc: 'El profesor lee literalmente lo que pone en un PowerPoint con letra tamaño 10 y fondo amarillo.', meToo: 87, comments: 5, uni: 'Facultad de Ciencias', hot: false, solutions: []},
-            { id: 10, cat: '🍽️ Cafetería', title: 'El microondas huele raro', desc: 'Alguien calentó pescado la semana pasada y el olor se ha quedado impregnado. Es insoportable.', meToo: 65, comments: 19, uni: 'Comedor Central', hot: false, solutions: []},
-            { id: 11, cat: '🏫 Instalaciones', title: 'Las sillas de las aulas nuevas destrozan la espalda', desc: 'Muy modernas, muy nórdicas, pero tras 2 horas sentado ahí tienes que pedir cita en el fisio.', meToo: 143, comments: 21, uni: 'Facultad de Derecho', hot: false, solutions: []},
-            { id: 12, cat: '📚 Clases', title: 'Coinciden los exámenes finales', desc: 'Tengo dos exámenes el mismo día con 1 hora de diferencia. La jefatura de estudios se ha lucido.', meToo: 76, comments: 11, uni: 'Escuela de Ingeniería', hot: false, solutions: []},
-            { id: 13, cat: '💻 Tecnología', title: 'Los PCs de la sala de ordenadores tardan 10 min en encender', desc: 'Windows está actualizando... desde 2018.', meToo: 198, comments: 14, uni: 'Aulario Norte', hot: false, solutions: []},
-            { id: 14, cat: '👨‍🏫 Profesores', title: 'No responde a los emails de tutoría', desc: 'Le escribí hace una semana para revisar el examen y sigo esperando.', meToo: 120, comments: 17, uni: 'Facultad de Letras', hot: false, solutions: []},
-            { id: 15, cat: '💬 Otros', title: 'El parking está lleno a las 8:15 am', desc: 'Si no llegas de madrugada, olvídate de aparcar en el campus. Toca dejar el coche a 20 minutos andando.', meToo: 210, comments: 33, uni: 'Campus Principal', hot: true, solutions: []},
-        ];
+function ScoreRing({ score, size=56 }) {
+  const color = score >= 85 ? '#1FA97D' : score >= 65 ? '#F2A93B' : '#E4572E';
+  const r = (size-8)/2, c = 2*Math.PI*r;
+  const dash = c * score/100;
+  return (
+    <div className="relative" style={{width:size, height:size}}>
+      <svg width={size} height={size}>
+        <circle cx={size/2} cy={size/2} r={r} stroke="#EDEAE1" strokeWidth="6" fill="none" />
+        <circle cx={size/2} cy={size/2} r={r} stroke={color} strokeWidth="6" fill="none" strokeDasharray={`${dash} ${c}`} strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`} />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold" style={{color}}>{score}</div>
+    </div>
+  );
+}
 
-        // --- FUNCIONES DE RENDERIZADO ---
-        function renderFeed(filterText = '') {
-            const container = document.getElementById('feed-container');
-            container.innerHTML = '';
-            
-            let filtered = posts.filter(p => 
-                (currentCategory === 'Todos' || p.cat.includes(currentCategory)) &&
-                (p.title.toLowerCase().includes(filterText.toLowerCase()) || p.desc.toLowerCase().includes(filterText.toLowerCase()))
-            );
+function TransportRow({ t }) {
+  return (
+    <div className="grid grid-cols-4 gap-2 text-center">
+      <div className="bg-white rounded-lg py-1.5 border border-stone-100"><div className="text-sm">🚶</div><div className="text-xs font-semibold text-stone-700">{t.walk}m</div></div>
+      <div className="bg-white rounded-lg py-1.5 border border-stone-100"><div className="text-sm">🚲</div><div className="text-xs font-semibold text-stone-700">{t.bike}m</div></div>
+      <div className="bg-white rounded-lg py-1.5 border border-stone-100"><div className="text-sm">🚌</div><div className="text-xs font-semibold text-stone-700">{t.bus}m</div></div>
+      <div className="bg-white rounded-lg py-1.5 border border-stone-100"><div className="text-sm">🚇</div><div className="text-xs font-semibold text-stone-700">{t.metro}m</div></div>
+    </div>
+  );
+}
 
-            if(filtered.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:3rem; color:var(--text-muted);">No hay problemas que coincidan. ¡Sé el primero en publicarlo!</div>';
-                return;
-            }
+/* ============================= LISTING CARD ============================= */
 
-            filtered.forEach(post => {
-                const hotTag = post.hot ? `<span class="card-hot">🔥 Tendencia</span>` : '';
-                container.innerHTML += `
-                    <div class="problem-card" onclick="openDetail(${post.id}, event)">
-                        <div class="card-meta">
-                            <span class="card-cat">${post.cat}</span>
-                            <span>📍 ${post.uni}</span>
-                            ${hotTag}
-                        </div>
-                        <h3 class="card-title">${post.title}</h3>
-                        <p class="card-desc">${post.desc}</p>
-                        <div class="card-actions">
-                            <div class="action-group">
-                                <span class="action-btn">💬 ${post.comments}</span>
-                            </div>
-                            <button class="btn-me-too" onclick="meToo(${post.id}, event, this)">
-                                ❤️ <span>${post.meToo} A mí también</span>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+function ListingCard({ listing, uni, favorites, toggleFav, compareSet, toggleCompare, onOpen, index }) {
+  const s = scoreListing(listing, uni);
+  const prox = proximityLabel(s.bestTime);
+  const isFav = favorites.has(listing.id);
+  const isCompared = compareSet.has(listing.id);
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden card-hover fade-in-up" style={{animationDelay: `${Math.min(index,8)*40}ms`}}>
+      <div className="flex flex-col sm:flex-row">
+        <div onClick={() => onOpen(listing)} className="cursor-pointer sm:w-44 h-36 sm:h-auto bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center text-5xl flex-shrink-0 relative">
+          {listing.photo}
+          <Badge className="absolute top-2 left-2 bg-white/90 text-stone-500">Ejemplo</Badge>
+        </div>
+        <div className="flex-1 p-4">
+          <div className="flex justify-between items-start gap-2">
+            <div onClick={() => onOpen(listing)} className="cursor-pointer">
+              <h3 className="font-semibold text-stone-900 leading-snug">{listing.title}</h3>
+              <p className="text-xs text-stone-400">{listing.barrio} · {listing.type}</p>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <p className="text-xl font-bold text-orange-600">{euro(listing.price)}</p>
+              <p className="text-[11px] text-stone-400">/mes</p>
+            </div>
+          </div>
 
-        function renderTrending() {
-            const container = document.getElementById('trending-container');
-            let sorted = [...posts].sort((a, b) => b.meToo - a.meToo).slice(0, 5);
-            container.innerHTML = '';
-            sorted.forEach((p, i) => {
-                container.innerHTML += `
-                    <div class="trend-item" onclick="openDetail(${p.id}, event)">
-                        <div class="trend-rank">${i+1}</div>
-                        <div class="trend-info">
-                            <h4>${p.title.substring(0, 30)}...</h4>
-                            <p>${p.meToo} personas sufren esto</p>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+          <div className="flex flex-wrap gap-1.5 my-2.5">
+            {AMENITIES_ALL.filter(a => listing.amenities[a.key]).slice(0,4).map(a => (
+              <Badge key={a.key} className="bg-stone-50 text-stone-600 border border-stone-100">{a.icon} {a.label}</Badge>
+            ))}
+          </div>
 
-        // --- INTERACCIONES ---
-        function switchView(viewId, navElement = null) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
-            
-            // Actualizar active state en menú de PC y Móvil
-            if(navElement) {
-                document.querySelectorAll('.nav-item, .nav-item-mob').forEach(n => n.classList.remove('active'));
-                navElement.classList.add('active');
-            }
-            window.scrollTo(0,0);
-        }
+          <div className="bg-stone-50 rounded-xl p-2.5 mb-2.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-xs font-semibold text-stone-600">📍 Hasta {uni.short} ({uni.campus})</p>
+              <span className="text-xs font-semibold" style={{color: prox.color}}>{prox.dot} {prox.label}</span>
+            </div>
+            <TransportRow t={s.times} />
+          </div>
 
-        function filterCategory(cat, element) {
-            document.querySelectorAll('.cat-chip').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            currentCategory = cat;
-            renderFeed(document.getElementById('searchInput').value);
-        }
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ScoreRing score={s.total} size={40} />
+              <div className="text-xs">
+                <p className="font-bold text-stone-800">{s.total}/100</p>
+                <p className="text-stone-400">para ti</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => toggleCompare(listing.id)} className={`w-9 h-9 rounded-full border flex items-center justify-center transition ${isCompared ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-stone-200 text-stone-500 hover:bg-stone-50'}`} title="Comparar">⚖️</button>
+              <button onClick={() => toggleFav(listing.id)} className={`w-9 h-9 rounded-full border flex items-center justify-center transition ${isFav ? 'bg-rose-500 border-rose-500 text-white pop-in' : 'border-stone-200 text-stone-500 hover:bg-stone-50'}`} title="Favorito">❤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        function filterPosts() {
-            renderFeed(document.getElementById('searchInput').value);
-        }
+/* ============================= HOME ============================= */
 
-        function meToo(id, event, btnElement) {
-            event.stopPropagation(); // Evitar abrir detalle
-            const post = posts.find(p => p.id === id);
-            
-            if(!btnElement.classList.contains('clicked')) {
-                post.meToo++;
-                btnElement.classList.add('clicked');
-                btnElement.innerHTML = `❤️ <span>${post.meToo} A mí también</span>`;
-                
-                // Gamificación local simulada
-                currentUser.sups++;
-                currentUser.points += 1;
-                updateProfileStats();
-                renderTrending(); // Actualizar ranking
-            }
-        }
+function Home({ onSearch }) {
+  const [uniId, setUniId] = useState('upv-vera');
+  const [price, setPrice] = useState(650);
+  const [transport, setTransport] = useState('bus');
 
-        function submitPost() {
-            const cat = document.getElementById('pub-cat').value;
-            const uni = document.getElementById('pub-uni').value;
-            const desc = document.getElementById('pub-desc').value;
-            
-            if(desc.trim() === '') return alert('Escribe cuál es tu problema.');
+  return (
+    <div>
+      <section className="bg-gradient-to-b from-orange-500 to-orange-400 text-white px-5 pt-14 pb-24 text-center relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-white/10"></div>
+        <div className="absolute bottom-0 -left-10 w-40 h-40 rounded-full bg-white/10"></div>
+        <div className="max-w-xl mx-auto relative">
+          <Badge className="bg-white/20 text-white mb-4">🎓 Hecho para estudiantes de Valencia</Badge>
+          <h1 className="display text-3xl sm:text-5xl font-extrabold leading-tight mb-4">Encuentra piso.<br/>Vive cerca de tu universidad.</h1>
+          <p className="text-white/90 text-base sm:text-lg">Compara alojamientos de Valencia según precio, ubicación y tiempo real hasta tu universidad.</p>
+        </div>
+      </section>
 
-            posts.unshift({
-                id: Date.now(),
-                cat: cat, title: desc.split('.')[0] || 'Nuevo problema', desc: desc,
-                meToo: 1, comments: 0, uni: uni, hot: false, solutions: []
-            });
+      <section className="max-w-2xl mx-auto px-4 -mt-14 relative pb-16">
+        <div className="bg-white rounded-3xl shadow-xl border border-stone-100 p-6 sm:p-8 fade-in-up">
 
-            document.getElementById('pub-desc').value = '';
-            
-            // Puntos
-            currentUser.posts++;
-            currentUser.points += 5;
-            updateProfileStats();
+          <h2 className="font-bold text-lg text-stone-900 mb-3">¿Dónde estudias?</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-7">
+            {UNIVERSITIES.map(u => (
+              <button key={u.id} onClick={() => setUniId(u.id)}
+                className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all ${uniId===u.id ? 'border-orange-500 bg-orange-50' : 'border-stone-100 hover:border-stone-200'}`}>
+                <p className={`font-bold text-sm ${uniId===u.id ? 'text-orange-600' : 'text-stone-800'}`}>{u.short}</p>
+                <p className="text-[11px] text-stone-400 leading-tight">{u.campus}</p>
+              </button>
+            ))}
+          </div>
 
-            switchView('home');
-            document.querySelector('.nav-item').classList.add('active');
-            renderFeed();
-            
-            alert('¡Problema publicado! Ganaste +5 puntos.');
-        }
+          <h2 className="font-bold text-lg text-stone-900 mb-3">¿Cuánto quieres pagar?</h2>
+          <div className="mb-7">
+            <input type="range" min="300" max="1000" step="10" value={price} onChange={e => setPrice(+e.target.value)} className="w-full" />
+            <p className="text-center text-orange-600 font-bold mt-2">300 € — {price} €/mes</p>
+          </div>
 
-        // --- VISTA DE DETALLE ---
-        function openDetail(id, event) {
-            if(event) event.stopPropagation();
-            currentPostId = id;
-            const post = posts.find(p => p.id === id);
-            
-            const container = document.getElementById('detail-post-container');
-            container.innerHTML = `
-                <div class="problem-card detail-card">
-                    <div class="card-meta">
-                        <span class="card-cat">${post.cat}</span>
-                        <span>📍 ${post.uni}</span>
-                    </div>
-                    <h1 style="font-size:2.5rem; margin-bottom:1rem; line-height:1.2;">${post.title}</h1>
-                    <p style="font-size:1.2rem; color:var(--text-muted); margin-bottom:2rem; line-height:1.6;">${post.desc}</p>
-                    
-                    <button class="btn-submit" style="background:var(--secondary);" onclick="meToo(${post.id}, event, this)">
-                        🔥 ¡A MÍ TAMBIÉN ME PASA! (${post.meToo})
-                    </button>
+          <h2 className="font-bold text-lg text-stone-900 mb-3">¿Cuánto quieres tardar?</h2>
+          <div className="grid grid-cols-4 gap-2 mb-8">
+            {[{k:'walk',i:'🚶',l:'15 min'},{k:'bike',i:'🚲',l:'15 min'},{k:'bus',i:'🚌',l:'20 min'},{k:'metro',i:'🚇',l:'30 min'}].map(o => (
+              <button key={o.k} onClick={() => setTransport(o.k)} className={`py-3 rounded-xl border-2 transition-all ${transport===o.k ? 'border-orange-500 bg-orange-50' : 'border-stone-100 hover:border-stone-200'}`}>
+                <div className="text-xl">{o.i}</div>
+                <div className={`text-[11px] font-semibold mt-0.5 ${transport===o.k ? 'text-orange-600' : 'text-stone-500'}`}>{o.l}</div>
+              </button>
+            ))}
+          </div>
+
+          <button onClick={() => onSearch({ uniId, price, transport })}
+            className="w-full bg-orange-500 hover:bg-orange-600 active:scale-[0.98] transition text-white font-bold py-4 rounded-2xl text-base shadow-lg shadow-orange-200">
+            Buscar piso
+          </button>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-3 mt-8">
+          {[
+            {i:'🎯', t:'No solo pisos', d:'Te decimos cuál te conviene según dónde estudias'},
+            {i:'🚇', t:'Tiempos reales', d:'A pie, en bici, bus o metro — no solo distancia en km'},
+            {i:'⭐', t:'Puntuación a tu medida', d:'Cada anuncio, valorado según lo que a ti te importa'},
+          ].map((f,i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 border border-stone-100 fade-in-up" style={{animationDelay:`${i*70}ms`}}>
+              <div className="text-2xl mb-2">{f.i}</div>
+              <p className="font-semibold text-stone-800 text-sm">{f.t}</p>
+              <p className="text-stone-400 text-xs mt-1">{f.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ============================= SEARCH ============================= */
+
+function SearchPage({ initial, favorites, toggleFav, compareSet, toggleCompare, onOpen, goCompare }) {
+  const [filters, setFilters] = useState({
+    uniId: initial?.uniId || 'upv-vera',
+    maxPrice: initial?.price || 1000,
+    type: 'all',
+    barrio: 'all',
+    maxTime: 60,
+    furnished: 'all',
+    ac: false, elevator: false, terrace: false, wifi: false, erasmus: false,
+    minStay: 0,
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const uni = uniById(filters.uniId);
+
+  const results = useMemo(() => {
+    return LISTINGS
+      .map(l => ({ l, s: scoreListing(l, uni) }))
+      .filter(({l,s}) => l.price <= filters.maxPrice)
+      .filter(({l}) => filters.type === 'all' || l.type === filters.type)
+      .filter(({l}) => filters.barrio === 'all' || l.barrio === filters.barrio)
+      .filter(({s}) => s.bestTime <= filters.maxTime)
+      .filter(({l}) => filters.furnished === 'all' || l.amenities.furnished === (filters.furnished === 'yes'))
+      .filter(({l}) => !filters.ac || l.amenities.ac)
+      .filter(({l}) => !filters.elevator || l.amenities.elevator)
+      .filter(({l}) => !filters.terrace || l.amenities.terrace)
+      .filter(({l}) => !filters.wifi || l.amenities.wifi)
+      .filter(({l}) => !filters.erasmus || l.amenities.erasmus)
+      .filter(({l}) => l.minStay >= filters.minStay)
+      .sort((a,b) => b.s.total - a.s.total)
+      .map(({l}) => l);
+  }, [filters, uni]);
+
+  const set = (k,v) => setFilters(f => ({...f, [k]: v}));
+
+  const FilterPanel = () => (
+    <div className="space-y-5">
+      <div>
+        <label className="text-xs font-bold text-stone-500 uppercase tracking-wide">Universidad</label>
+        <select value={filters.uniId} onChange={e=>set('uniId', e.target.value)} className="w-full mt-1.5 p-2.5 border border-stone-200 rounded-xl text-sm bg-white">
+          {UNIVERSITIES.map(u => <option key={u.id} value={u.id}>{u.short} — {u.campus}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="text-xs font-bold text-stone-500 uppercase tracking-wide">Precio máximo: {euro(filters.maxPrice)}</label>
+        <input type="range" min="300" max="1000" step="10" value={filters.maxPrice} onChange={e=>set('maxPrice', +e.target.value)} className="w-full mt-2" />
+      </div>
+      <div>
+        <label className="text-xs font-bold text-stone-500 uppercase tracking-wide">Tiempo máximo: {filters.maxTime} min</label>
+        <input type="range" min="5" max="60" step="5" value={filters.maxTime} onChange={e=>set('maxTime', +e.target.value)} className="w-full mt-2" />
+      </div>
+      <div>
+        <label className="text-xs font-bold text-stone-500 uppercase tracking-wide">Tipo</label>
+        <select value={filters.type} onChange={e=>set('type', e.target.value)} className="w-full mt-1.5 p-2.5 border border-stone-200 rounded-xl text-sm bg-white">
+          <option value="all">Todos</option>
+          <option>Habitación individual</option>
+          <option>Habitación compartida</option>
+          <option>Piso completo</option>
+        </select>
+      </div>
+      <div>
+        <label className="text-xs font-bold text-stone-500 uppercase tracking-wide">Barrio</label>
+        <select value={filters.barrio} onChange={e=>set('barrio', e.target.value)} className="w-full mt-1.5 p-2.5 border border-stone-200 rounded-xl text-sm bg-white">
+          <option value="all">Todos</option>
+          {BARRIOS.map(b => <option key={b.name}>{b.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="text-xs font-bold text-stone-500 uppercase tracking-wide">Amueblado</label>
+        <select value={filters.furnished} onChange={e=>set('furnished', e.target.value)} className="w-full mt-1.5 p-2.5 border border-stone-200 rounded-xl text-sm bg-white">
+          <option value="all">Indiferente</option>
+          <option value="yes">Sí</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+      <div>
+        <label className="text-xs font-bold text-stone-500 uppercase tracking-wide">Estancia mínima</label>
+        <select value={filters.minStay} onChange={e=>set('minStay', +e.target.value)} className="w-full mt-1.5 p-2.5 border border-stone-200 rounded-xl text-sm bg-white">
+          <option value="0">Cualquiera</option>
+          <option value="3">3 meses</option>
+          <option value="6">6 meses</option>
+          <option value="9">9 meses</option>
+          <option value="12">12 meses</option>
+        </select>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {[['ac','❄️ A/C'],['elevator','🛗 Ascensor'],['terrace','🌿 Terraza'],['wifi','📶 Internet'],['erasmus','🌍 Erasmus']].map(([k,l]) => (
+          <button key={k} onClick={()=>set(k, !filters[k])} className={`text-xs font-semibold py-2 rounded-lg border transition ${filters[k] ? 'bg-orange-50 border-orange-400 text-orange-600' : 'border-stone-200 text-stone-500'}`}>{l}</button>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="font-bold text-xl text-stone-900">Alojamientos cerca de {uni.short}</h1>
+          <p className="text-stone-400 text-sm transition-all">{results.length} resultados encontrados</p>
+        </div>
+        <button onClick={()=>setShowFilters(s=>!s)} className="lg:hidden px-4 py-2 rounded-xl border border-stone-200 text-sm font-semibold">Filtros</button>
+      </div>
+
+      <div className="grid lg:grid-cols-[280px_1fr] gap-6">
+        <div className={`${showFilters ? 'block' : 'hidden'} lg:block bg-white rounded-2xl border border-stone-200 p-5 h-fit lg:sticky lg:top-4`}>
+          <h3 className="font-bold text-stone-900 mb-4">Filtros</h3>
+          <FilterPanel />
+        </div>
+
+        <div>
+          {compareSet.size > 0 && (
+            <button onClick={goCompare} className="w-full mb-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">
+              ⚖️ Comparar {compareSet.size} piso{compareSet.size>1?'s':''}
+            </button>
+          )}
+          <div className="space-y-4">
+            {results.map((l, i) => (
+              <ListingCard key={l.id} listing={l} uni={uni} favorites={favorites} toggleFav={toggleFav} compareSet={compareSet} toggleCompare={toggleCompare} onOpen={onOpen} index={i} />
+            ))}
+            {results.length === 0 && (
+              <div className="text-center py-16 text-stone-400">
+                <p className="text-4xl mb-3">🔍</p>
+                <p>No hay pisos con estos filtros. Prueba a ampliar tu búsqueda.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= LISTING DETAIL ============================= */
+
+function ListingDetail({ listing, favorites, toggleFav, onBack, onOpen }) {
+  const [uniId, setUniId] = useState(listing.nearestUniId);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const uni = uniById(uniId);
+  const s = scoreListing(listing, uni);
+  const prox = proximityLabel(s.bestTime);
+  const similar = LISTINGS.filter(l => l.barrio === listing.barrio && l.id !== listing.id).slice(0,3);
+  const isFav = favorites.has(listing.id);
+
+  const pros = [];
+  const cons = [];
+  if (s.breakdown.distance >= 8) pros.push(`Muy cerca de ${uni.short}`);
+  if (s.breakdown.price >= 7) pros.push('Precio por debajo de otros pisos similares');
+  if (s.times.metro <= 12) pros.push('Metro cercano');
+  if (listing.amenities.wifi) pros.push('Internet incluido');
+  if (listing.amenities.terrace) pros.push('Cuenta con terraza');
+  if (!pros.length) pros.push('Buena relación calidad-precio para la zona');
+
+  if (listing.rooms >= 4) cons.push('Piso con muchos compañeros');
+  if (!listing.utilitiesIncluded) cons.push('Gastos no incluidos');
+  if (!listing.amenities.ac) cons.push('Sin aire acondicionado');
+  if (s.breakdown.distance <= 4) cons.push(`Algo lejos de ${uni.short}`);
+  if (!cons.length) cons.push('Estancia mínima algo exigente');
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <button onClick={onBack} className="text-stone-500 font-semibold text-sm mb-4">← Volver a resultados</button>
+
+      <div className="bg-gradient-to-br from-orange-100 to-amber-50 rounded-3xl h-56 sm:h-72 flex items-center justify-center text-8xl relative mb-5">
+        {listing.photo}
+        <Badge className="absolute top-4 left-4 bg-white/90 text-stone-500">📷 Fotos de ejemplo — Demostración</Badge>
+        <button onClick={() => toggleFav(listing.id)} className={`absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center text-lg ${isFav ? 'bg-rose-500 text-white pop-in' : 'bg-white/90 text-stone-500'}`}>❤</button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
+        <div>
+          <h1 className="font-bold text-2xl text-stone-900">{listing.title}</h1>
+          <p className="text-stone-400 text-sm">Dirección aproximada · {listing.barrio}, Valencia</p>
+        </div>
+        <p className="text-3xl font-extrabold text-orange-600 flex-shrink-0">{euro(listing.price)}<span className="text-sm text-stone-400 font-medium">/mes</span></p>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-3 mb-6">
+        <div className="bg-stone-50 rounded-xl p-3 text-center"><p className="text-xs text-stone-400">Habitaciones</p><p className="font-bold text-stone-800">{listing.rooms}</p></div>
+        <div className="bg-stone-50 rounded-xl p-3 text-center"><p className="text-xs text-stone-400">Estancia mín.</p><p className="font-bold text-stone-800">{listing.minStay} meses</p></div>
+        <div className="bg-stone-50 rounded-xl p-3 text-center"><p className="text-xs text-stone-400">Disponible desde</p><p className="font-bold text-stone-800">{listing.availableFrom.toLocaleDateString('es-ES')}</p></div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-6">
+        {AMENITIES_ALL.filter(a => listing.amenities[a.key]).map(a => (
+          <Badge key={a.key} className="bg-white border border-stone-200 text-stone-600">{a.icon} {a.label}</Badge>
+        ))}
+        <Badge className={listing.utilitiesIncluded ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-400'}>{listing.utilitiesIncluded ? '✓ Gastos incluidos' : 'Gastos no incluidos'}</Badge>
+      </div>
+
+      <h3 className="font-bold text-stone-900 mb-2">Descripción</h3>
+      <p className="text-stone-500 text-sm mb-6 leading-relaxed">{listing.description}</p>
+
+      <h3 className="font-bold text-stone-900 mb-3">Universidades cercanas</h3>
+      <div className="flex gap-2 overflow-x-auto scrollbar-none mb-3 pb-1">
+        {UNIVERSITIES.map(u => (
+          <button key={u.id} onClick={()=>setUniId(u.id)} className={`flex-shrink-0 px-3 py-2 rounded-xl border-2 text-xs font-semibold whitespace-nowrap ${uniId===u.id ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-stone-100 text-stone-500'}`}>
+            {u.short} · {u.campus}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-stone-50 rounded-2xl p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-semibold text-stone-700 text-sm">📍 {listing.title} → {uni.short}</p>
+          <span className="text-xs font-semibold" style={{color:prox.color}}>{prox.dot} {prox.label}</span>
+        </div>
+        <TransportRow t={s.times} />
+      </div>
+
+      <CityMap listings={[listing]} selectedUni={uni} selectedListing={listing} onSelectListing={()=>{}} height={280} />
+
+      <div className="mt-6 mb-8">
+        <button onClick={() => setShowAnalysis(v => !v)} className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-4 rounded-2xl transition">
+          {showAnalysis ? 'Ocultar análisis' : '¿Me conviene este piso?'}
+        </button>
+
+        {showAnalysis && (
+          <div className="mt-4 bg-white border-2 border-stone-100 rounded-2xl p-5 fade-in-up">
+            <div className="flex items-center gap-3 mb-4">
+              <ScoreRing score={s.total} size={64} />
+              <div>
+                <p className="font-bold text-lg text-stone-900">{s.total}/100 — {s.total>=85?'Muy buena opción':s.total>=65?'Buena opción':'Opción a considerar'}</p>
+                <p className="text-stone-400 text-sm">Basado en tu universidad seleccionada ({uni.short})</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              {[['Precio', s.breakdown.price],['Distancia', s.breakdown.distance],['Transporte', s.breakdown.transport],['Características', s.breakdown.features]].map(([label,val]) => (
+                <div key={label} className="bg-stone-50 rounded-xl p-3 text-center">
+                  <p className="text-xs text-stone-400 mb-1">{label}</p>
+                  <p className="font-bold text-stone-800">{val}/10</p>
                 </div>
-            `;
+              ))}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <p className="font-semibold text-emerald-600 text-sm mb-2">Lo mejor</p>
+                <ul className="space-y-1.5">
+                  {pros.map((p,i) => <li key={i} className="text-sm text-stone-600 flex gap-2"><span className="text-emerald-500">✓</span>{p}</li>)}
+                </ul>
+              </div>
+              <div>
+                <p className="font-semibold text-amber-600 text-sm mb-2">Lo peor</p>
+                <ul className="space-y-1.5">
+                  {cons.map((c,i) => <li key={i} className="text-sm text-stone-600 flex gap-2"><span className="text-amber-500">⚠</span>{c}</li>)}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-            renderSolutions(post.solutions);
-            switchView('detail');
-        }
+      <div className="flex items-center justify-between bg-stone-50 rounded-xl p-4 mb-8">
+        <div>
+          <p className="text-xs text-stone-400">Fuente del anuncio</p>
+          <p className="text-sm font-semibold text-stone-600">Demo — PisoCampus (dato ficticio)</p>
+        </div>
+        <button className="bg-stone-200 text-stone-500 text-sm font-semibold px-4 py-2 rounded-xl cursor-not-allowed" title="Anuncio de demostración, sin fuente externa real">Ver anuncio original</button>
+      </div>
 
-        function renderSolutions(solutions) {
-            const container = document.getElementById('solutions-container');
-            container.innerHTML = '';
-            
-            if(solutions.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:2rem;">Aún no hay soluciones. ¡Sé el primero en ayudar!</p>';
-                return;
-            }
+      {similar.length > 0 && (
+        <div>
+          <h3 className="font-bold text-stone-900 mb-3">Pisos similares en {listing.barrio}</h3>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {similar.map(l => (
+              <div key={l.id} onClick={() => onOpen(l)} className="bg-white border border-stone-200 rounded-xl p-3 cursor-pointer card-hover">
+                <div className="text-3xl mb-2">{l.photo}</div>
+                <p className="font-semibold text-sm text-stone-800 truncate">{l.title}</p>
+                <p className="text-orange-600 font-bold text-sm">{euro(l.price)}/mes</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-            // Ordenar por votos
-            solutions.sort((a,b) => b.votes - a.votes).forEach((sol, i) => {
-                container.innerHTML += `
-                    <div class="solution-card">
-                        <div class="vote-col">
-                            <button class="vote-btn" onclick="voteSolution(${i})">▲</button>
-                            <span style="font-weight:900; color:var(--primary);">${sol.votes}</span>
-                        </div>
-                        <div>
-                            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:bold;">SOLUCIÓN PROPUESTA</span>
-                            <p style="margin-top:0.3rem;">${sol.text}</p>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+/* ============================= MAP PAGE ============================= */
 
-        function addSolution() {
-            const input = document.getElementById('sol-input');
-            if(input.value.trim() === '') return;
-            
-            const post = posts.find(p => p.id === currentPostId);
-            post.solutions.push({ text: input.value, votes: 0 });
-            
-            currentUser.sols++;
-            currentUser.points += 2;
-            updateProfileStats();
+function MapPage() {
+  const [uniId, setUniId] = useState('upv-vera');
+  const [selected, setSelected] = useState(null);
+  const uni = uniById(uniId);
+  const visible = useMemo(() => LISTINGS.slice(0, 40), []);
 
-            input.value = '';
-            renderSolutions(post.solutions);
-        }
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      <h1 className="font-bold text-xl text-stone-900 mb-1">Mapa de Valencia</h1>
+      <p className="text-stone-400 text-sm mb-4">Pisos, barrios y universidades. Selecciona un piso para ver la ruta.</p>
 
-        function voteSolution(index) {
-            const post = posts.find(p => p.id === currentPostId);
-            post.solutions[index].votes++;
-            renderSolutions(post.solutions);
-        }
+      <div className="flex gap-2 overflow-x-auto scrollbar-none mb-4 pb-1">
+        {UNIVERSITIES.map(u => (
+          <button key={u.id} onClick={()=>setUniId(u.id)} className={`flex-shrink-0 px-3 py-2 rounded-xl border-2 text-xs font-semibold whitespace-nowrap ${uniId===u.id ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-stone-100 text-stone-500'}`} style={uniId===u.id ? {} : {}}>
+            <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{background:u.color}}></span>{u.short} · {u.campus}
+          </button>
+        ))}
+      </div>
 
-        function updateProfileStats() {
-            document.getElementById('user-points').innerText = currentUser.points;
-            document.getElementById('user-posts').innerText = currentUser.posts;
-            document.getElementById('user-sols').innerText = currentUser.sols;
-            document.getElementById('user-sups').innerText = currentUser.sups;
-        }
+      <CityMap listings={visible} selectedUni={uni} selectedListing={selected} onSelectListing={setSelected} height={440} />
 
-        // Inicialización
-        renderFeed();
-        renderTrending();
-        updateProfileStats();
-    </script>
+      {selected ? (
+        <div className="mt-4 bg-white rounded-2xl border border-stone-200 p-4 fade-in-up">
+          <p className="font-semibold text-stone-800 mb-2">{selected.title} → {uni.short}</p>
+          <TransportRow t={timesFor(haversine(uni.lat, uni.lng, selected.lat, selected.lng))} />
+        </div>
+      ) : (
+        <p className="text-center text-stone-400 text-sm mt-4">Toca un punto negro del mapa para ver tiempos hasta {uni.short}</p>
+      )}
+    </div>
+  );
+}
+
+/* ============================= UNIVERSITIES PAGE ============================= */
+
+function UniversitiesPage({ onExplore }) {
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-6">
+      <h1 className="font-bold text-xl text-stone-900 mb-1">Universidades</h1>
+      <p className="text-stone-400 text-sm mb-6">Los principales campus universitarios de Valencia.</p>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {UNIVERSITIES.map(u => {
+          const count = LISTINGS.filter(l => {
+            const d = haversine(u.lat, u.lng, l.lat, l.lng);
+            return d < 3.5;
+          }).length;
+          return (
+            <div key={u.id} className="bg-white rounded-2xl border border-stone-200 p-5 card-hover">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white" style={{background:u.color}}>{u.short}</div>
+                <div>
+                  <p className="font-bold text-stone-900">{u.name}</p>
+                  <p className="text-xs text-stone-400">{u.campus}</p>
+                </div>
+              </div>
+              <p className="text-sm text-stone-500 mb-4">{count} alojamientos de ejemplo cerca de este campus.</p>
+              <button onClick={() => onExplore(u.id)} className="text-sm font-semibold text-orange-600">Ver pisos cerca de aquí →</button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ============================= FAVORITES ============================= */
+
+function FavoritesPage({ favorites, toggleFav, onOpen }) {
+  const items = LISTINGS.filter(l => favorites.has(l.id));
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-6">
+      <h1 className="font-bold text-xl text-stone-900 mb-1">Mis pisos</h1>
+      <p className="text-stone-400 text-sm mb-6">{items.length} guardados</p>
+      {items.length === 0 ? (
+        <div className="text-center py-16 text-stone-400">
+          <p className="text-4xl mb-3">❤️</p>
+          <p>Aún no has guardado ningún piso.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map(l => {
+            const uni = uniById(l.nearestUniId);
+            const s = scoreListing(l, uni);
+            return (
+              <div key={l.id} className="bg-white rounded-2xl border border-stone-200 p-4 flex items-center gap-4 fade-in-up">
+                <div onClick={()=>onOpen(l)} className="cursor-pointer text-4xl bg-orange-50 rounded-xl w-16 h-16 flex items-center justify-center flex-shrink-0">{l.photo}</div>
+                <div onClick={()=>onOpen(l)} className="cursor-pointer flex-1 min-w-0">
+                  <p className="font-semibold text-stone-800 truncate">{l.title}</p>
+                  <p className="text-xs text-stone-400">{euro(l.price)}/mes · {s.bestTime} min a {uni.short} · ⭐ {s.total}/100</p>
+                </div>
+                <button onClick={()=>toggleFav(l.id)} className="text-rose-500 font-semibold text-sm flex-shrink-0">Quitar</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================= COMPARE ============================= */
+
+function ComparePage({ compareSet, toggleCompare }) {
+  const items = LISTINGS.filter(l => compareSet.has(l.id)).slice(0,3);
+  const uni = uniById(items[0]?.nearestUniId || 'upv-vera');
+  const rows = items.map(l => ({ l, s: scoreListing(l, uni) }));
+
+  const best = (key, higherBetter=true) => {
+    if (!rows.length) return null;
+    const vals = rows.map(r => key(r));
+    return higherBetter ? Math.max(...vals) : Math.min(...vals);
+  };
+  const bestPrice = best(r => r.l.price, false);
+  const bestTimeMin = best(r => r.s.bestTime, false);
+  const bestScore = best(r => r.s.total, true);
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <h1 className="font-bold text-xl text-stone-900 mb-1">Comparar pisos</h1>
+      <p className="text-stone-400 text-sm mb-6">Hasta 3 pisos, comparados sobre {uni.short}.</p>
+      {items.length === 0 ? (
+        <div className="text-center py-16 text-stone-400">
+          <p className="text-4xl mb-3">⚖️</p>
+          <p>Elige hasta 3 pisos desde el buscador para compararlos aquí.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full bg-white rounded-2xl border border-stone-200 overflow-hidden text-sm">
+            <thead>
+              <tr className="bg-stone-50">
+                <th className="p-3 text-left font-semibold text-stone-500">—</th>
+                {rows.map(({l}) => (
+                  <th key={l.id} className="p-3 text-center">
+                    <p className="font-bold text-stone-800">{l.title}</p>
+                    <button onClick={()=>toggleCompare(l.id)} className="text-xs text-rose-500 font-semibold mt-1">Quitar</button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-stone-100">
+                <td className="p-3 font-semibold text-stone-500">Precio</td>
+                {rows.map(({l}) => <td key={l.id} className={`p-3 text-center font-bold ${l.price===bestPrice ? 'text-emerald-600 bg-emerald-50' : 'text-stone-700'}`}>{euro(l.price)}</td>)}
+              </tr>
+              <tr className="border-t border-stone-100">
+                <td className="p-3 font-semibold text-stone-500">Tiempo a {uni.short}</td>
+                {rows.map(({l,s}) => <td key={l.id} className={`p-3 text-center font-bold ${s.bestTime===bestTimeMin ? 'text-emerald-600 bg-emerald-50' : 'text-stone-700'}`}>{s.bestTime} min</td>)}
+              </tr>
+              <tr className="border-t border-stone-100">
+                <td className="p-3 font-semibold text-stone-500">Habitaciones</td>
+                {rows.map(({l}) => <td key={l.id} className="p-3 text-center text-stone-700">{l.rooms}</td>)}
+              </tr>
+              <tr className="border-t border-stone-100">
+                <td className="p-3 font-semibold text-stone-500">Metro</td>
+                {rows.map(({l,s}) => <td key={l.id} className="p-3 text-center text-stone-700">{s.times.metro} min</td>)}
+              </tr>
+              <tr className="border-t border-stone-100">
+                <td className="p-3 font-semibold text-stone-500">Puntuación</td>
+                {rows.map(({l,s}) => <td key={l.id} className={`p-3 text-center font-bold ${s.total===bestScore ? 'text-emerald-600 bg-emerald-50' : 'text-stone-700'}`}>{s.total}</td>)}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================= ELIGE POR MI ============================= */
+
+function ChooseForMePage() {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState({ uniId:'upv-vera', budget:500, maxTime:20, type:'Habitación individual', priceImportance:'Alta', distImportance:'Alta' });
+  const [results, setResults] = useState(null);
+
+  const questions = [
+    { key:'uniId', q:'¿Dónde estudias?', type:'uni' },
+    { key:'budget', q:'¿Cuál es tu presupuesto?', type:'range' },
+    { key:'maxTime', q:'¿Cuánto quieres tardar como máximo?', type:'time' },
+    { key:'type', q:'¿Qué prefieres?', type:'choice', options:['Habitación individual','Habitación compartida','Piso completo'] },
+    { key:'priceImportance', q:'¿Cuánto te importa el precio?', type:'choice', options:['Baja','Media','Alta'] },
+    { key:'distImportance', q:'¿Cuánto te importa la distancia?', type:'choice', options:['Baja','Media','Alta'] },
+  ];
+
+  const runMatch = () => {
+    const uni = uniById(answers.uniId);
+    const wMap = { Baja: 0.12, Media: 0.22, Alta: 0.36 };
+    const prefs = { wPrice: wMap[answers.priceImportance], wDist: wMap[answers.distImportance], wTrans: 0.18, wFeat: 0.16 };
+    const scored = LISTINGS
+      .filter(l => l.price <= answers.budget + 80)
+      .filter(l => l.type === answers.type)
+      .map(l => ({ l, s: scoreListing(l, uni, prefs) }))
+      .filter(({s}) => s.bestTime <= answers.maxTime + 15)
+      .sort((a,b) => b.s.total - a.s.total)
+      .slice(0,5);
+    setResults({ uni, scored });
+    setStep(questions.length);
+  };
+
+  if (step >= questions.length) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        <h1 className="font-bold text-xl text-stone-900 mb-1">🏆 Tus mejores opciones</h1>
+        <p className="text-stone-400 text-sm mb-6">Según tus respuestas, para {results.uni.short}.</p>
+        <div className="space-y-3">
+          {results.scored.map(({l,s}, i) => (
+            <div key={l.id} className="bg-white rounded-2xl border border-stone-200 p-4 flex items-center gap-4 fade-in-up" style={{animationDelay:`${i*80}ms`}}>
+              <div className="text-2xl font-extrabold text-stone-300 w-8 flex-shrink-0">{i+1}</div>
+              <div className="text-3xl bg-orange-50 rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0">{l.photo}</div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-stone-800 truncate">{l.title}</p>
+                <p className="text-xs text-stone-400">{euro(l.price)}/mes · {s.bestTime} min a {results.uni.short}</p>
+              </div>
+              <ScoreRing score={s.total} size={44} />
+            </div>
+          ))}
+          {results.scored.length === 0 && <p className="text-stone-400 text-center py-10">No encontramos pisos que encajen. Prueba a subir el presupuesto.</p>}
+        </div>
+        <button onClick={() => { setStep(0); setResults(null); }} className="mt-6 text-sm font-semibold text-orange-600">← Volver a empezar</button>
+      </div>
+    );
+  }
+
+  const cur = questions[step];
+  return (
+    <div className="max-w-xl mx-auto px-4 py-10">
+      <p className="text-xs font-bold text-orange-500 uppercase mb-2">Pregunta {step+1} de {questions.length}</p>
+      <h1 className="font-bold text-2xl text-stone-900 mb-6">{cur.q}</h1>
+
+      {cur.type === 'uni' && (
+        <div className="grid grid-cols-2 gap-2.5">
+          {UNIVERSITIES.map(u => (
+            <button key={u.id} onClick={() => setAnswers(a=>({...a, uniId:u.id}))} className={`text-left px-3 py-2.5 rounded-xl border-2 ${answers.uniId===u.id ? 'border-orange-500 bg-orange-50' : 'border-stone-100'}`}>
+              <p className="font-bold text-sm text-stone-800">{u.short}</p><p className="text-[11px] text-stone-400">{u.campus}</p>
+            </button>
+          ))}
+        </div>
+      )}
+      {cur.type === 'range' && (
+        <div>
+          <input type="range" min="300" max="1000" step="10" value={answers.budget} onChange={e=>setAnswers(a=>({...a,budget:+e.target.value}))} className="w-full" />
+          <p className="text-center text-orange-600 font-bold mt-2">{euro(answers.budget)}/mes</p>
+        </div>
+      )}
+      {cur.type === 'time' && (
+        <div>
+          <input type="range" min="5" max="45" step="5" value={answers.maxTime} onChange={e=>setAnswers(a=>({...a,maxTime:+e.target.value}))} className="w-full" />
+          <p className="text-center text-orange-600 font-bold mt-2">{answers.maxTime} minutos</p>
+        </div>
+      )}
+      {cur.type === 'choice' && (
+        <div className="space-y-2">
+          {cur.options.map(o => (
+            <button key={o} onClick={() => setAnswers(a=>({...a,[cur.key]:o}))} className={`w-full text-left px-4 py-3 rounded-xl border-2 font-medium ${answers[cur.key]===o ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-stone-100 text-stone-600'}`}>{o}</button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex justify-between mt-8">
+        <button disabled={step===0} onClick={() => setStep(s=>s-1)} className="text-sm font-semibold text-stone-400 disabled:opacity-0">← Atrás</button>
+        <button onClick={() => step === questions.length-1 ? runMatch() : setStep(s=>s+1)} className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl transition">
+          {step === questions.length-1 ? 'Ver resultados' : 'Siguiente'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= STATS ============================= */
+
+function StatsPage() {
+  const avgPrice = Math.round(LISTINGS.reduce((s,l)=>s+l.price,0)/LISTINGS.length);
+  const byBarrio = {};
+  LISTINGS.forEach(l => { byBarrio[l.barrio] = (byBarrio[l.barrio]||[]).concat(l.price); });
+  const avgByBarrio = Object.entries(byBarrio).map(([b,arr]) => [b, Math.round(arr.reduce((a,c)=>a+c,0)/arr.length)]);
+  const cheapest = avgByBarrio.sort((a,b)=>a[1]-b[1])[0];
+  const upv = uniById('upv-vera');
+  const closestBarrio = avgByBarrio.map(([b]) => {
+    const sample = LISTINGS.find(l=>l.barrio===b);
+    return [b, haversine(upv.lat, upv.lng, sample.lat, sample.lng)];
+  }).sort((a,b)=>a[1]-b[1])[0];
+  const avgTime = Math.round(LISTINGS.reduce((sum,l) => {
+    const uni = uniById(l.nearestUniId);
+    return sum + scoreListing(l, uni).bestTime;
+  }, 0) / LISTINGS.length);
+
+  const maxBarrioPrice = Math.max(...avgByBarrio.map(([,p])=>p));
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <h1 className="font-bold text-xl text-stone-900 mb-1">Valencia para estudiantes</h1>
+      <p className="text-stone-400 text-sm mb-6">Datos agregados de nuestro catálogo de ejemplo.</p>
+
+      <div className="grid sm:grid-cols-4 gap-3 mb-8">
+        {[
+          ['Precio medio habitación', euro(avgPrice)+'/mes', '💰'],
+          ['Barrio más cercano a UPV', closestBarrio[0], '📍'],
+          ['Barrio más económico', cheapest[0], '💸'],
+          ['Tiempo medio a la universidad', avgTime+' min', '⏱️'],
+        ].map(([t,v,i]) => (
+          <div key={t} className="bg-white rounded-2xl border border-stone-200 p-4 text-center">
+            <div className="text-2xl mb-2">{i}</div>
+            <p className="text-xs text-stone-400 mb-1">{t}</p>
+            <p className="font-bold text-orange-600">{v}</p>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="font-bold text-stone-900 mb-3">Precio medio por barrio</h3>
+      <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-2.5">
+        {avgByBarrio.sort((a,b)=>a[1]-b[1]).map(([b,p]) => (
+          <div key={b} className="flex items-center gap-3">
+            <p className="text-xs text-stone-500 w-28 flex-shrink-0 truncate">{b}</p>
+            <div className="flex-1 bg-stone-100 rounded-full h-3">
+              <div className="bg-orange-400 h-3 rounded-full transition-all" style={{width: `${(p/maxBarrioPrice)*100}%`}}></div>
+            </div>
+            <p className="text-xs font-bold text-stone-700 w-14 text-right flex-shrink-0">{p}€</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================= NAV ============================= */
+
+function TopNav({ page, go }) {
+  const items = [
+    ['home','Inicio'], ['search','Buscar'], ['map','Mapa'], ['universities','Universidades'],
+    ['choose','Elige por mí'], ['stats','Datos'], ['favorites','Favoritos'],
+  ];
+  return (
+    <div className="hidden md:flex items-center justify-between px-6 py-3 border-b border-stone-100 bg-white/90 backdrop-blur sticky top-0 z-30">
+      <div onClick={()=>go('home')} className="flex items-center gap-2 cursor-pointer">
+        <div className="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center font-extrabold text-sm">P</div>
+        <span className="font-extrabold text-stone-900">PisoCampus <span className="text-orange-500">Valencia</span></span>
+      </div>
+      <div className="flex gap-1">
+        {items.map(([k,l]) => (
+          <button key={k} onClick={()=>go(k)} className={`px-3 py-2 rounded-lg text-sm font-semibold transition ${page===k ? 'bg-orange-50 text-orange-600' : 'text-stone-500 hover:bg-stone-50'}`}>{l}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BottomNav({ page, go }) {
+  const items = [
+    ['home','🏠','Inicio'], ['search','🔎','Buscar'], ['map','🗺️','Mapa'], ['favorites','❤️','Favoritos'], ['choose','👤','Perfil'],
+  ];
+  return (
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-100 flex justify-around px-1 py-2 z-30">
+      {items.map(([k,i,l]) => (
+        <button key={k} onClick={()=>go(k)} className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition ${page===k ? 'text-orange-600' : 'text-stone-400'}`}>
+          <span className="text-lg">{i}</span>
+          <span className="text-[10px] font-semibold">{l}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ============================= APP ============================= */
+
+function App() {
+  const [page, setPage] = useState('home');
+  const [searchParams, setSearchParams] = useState(null);
+  const [openListing, setOpenListing] = useState(null);
+  const [favorites, setFavorites] = useState(new Set());
+  const [compareSet, setCompareSet] = useState(new Set());
+
+  const toggleFav = (id) => setFavorites(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleCompare = (id) => setCompareSet(prev => {
+    const n = new Set(prev);
+    if (n.has(id)) n.delete(id); else if (n.size < 3) n.add(id);
+    return n;
+  });
+
+  const go = (p) => { setPage(p); setOpenListing(null); window.scrollTo(0,0); };
+  const openDetail = (l) => { setOpenListing(l); window.scrollTo(0,0); };
+
+  let content;
+  if (openListing) {
+    content = <ListingDetail listing={openListing} favorites={favorites} toggleFav={toggleFav} onBack={()=>setOpenListing(null)} onOpen={openDetail} />;
+  } else if (page === 'home') {
+    content = <Home onSearch={(p)=>{ setSearchParams(p); setPage('search'); }} />;
+  } else if (page === 'search') {
+    content = <SearchPage initial={searchParams} favorites={favorites} toggleFav={toggleFav} compareSet={compareSet} toggleCompare={toggleCompare} onOpen={openDetail} goCompare={()=>go('compare')} />;
+  } else if (page === 'map') {
+    content = <MapPage />;
+  } else if (page === 'universities') {
+    content = <UniversitiesPage onExplore={(uniId)=>{ setSearchParams({uniId, price:1000, transport:'bus'}); setPage('search'); }} />;
+  } else if (page === 'favorites') {
+    content = <FavoritesPage favorites={favorites} toggleFav={toggleFav} onOpen={openDetail} />;
+  } else if (page === 'compare') {
+    content = <ComparePage compareSet={compareSet} toggleCompare={toggleCompare} />;
+  } else if (page === 'choose') {
+    content = <ChooseForMePage />;
+  } else if (page === 'stats') {
+    content = <StatsPage />;
+  }
+
+  return (
+    <div>
+      <TopNav page={page} go={go} />
+      <div className="pb-20 md:pb-6">{content}</div>
+      <BottomNav page={page} go={go} />
+      <footer className="hidden md:block text-center text-xs text-stone-300 py-6">
+        PisoCampus Valencia — MVP de demostración. Todos los anuncios son ficticios y están marcados como "Ejemplo".
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
 </body>
 </html>
