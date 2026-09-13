@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>¿A alguien más le pasa?</title>
+    
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================
+           VARIABLES Y DISEÑO BASE
+           ========================================== */
+        :root {
+            --primary: #6366f1; /* Indigo vibrante */
+            --primary-hover: #4f46e5;
+            --secondary: #f43f5e; /* Rojo/Rosa para "Me pasa" */
+            --bg-color: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 20px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-y: scroll;
+        }
+
+        h1, h2, h3, h4, h5 { font-family: 'Outfit', sans-serif; font-weight: 800; }
+
+        /* ==========================================
+           LAYOUT PRINCIPAL (Grid de Escritorio)
+           ========================================== */
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr 320px;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Vistas (SPA) */
+        .view { display: none; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ==========================================
+           NAVEGACIÓN (SIDEBAR ESCRITORIO)
+           ========================================== */
+        .sidebar { position: sticky; top: 2rem; height: calc(100vh - 4rem); display: flex; flex-direction: column; }
+        .brand { font-size: 1.5rem; color: var(--primary); margin-bottom: 2rem; line-height: 1.1; }
+        
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; }
+        .nav-item {
+            display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem;
+            border-radius: 14px; color: var(--text-muted); font-weight: 600;
+            text-decoration: none; cursor: pointer; transition: all 0.2s;
+            font-size: 1.1rem;
+        }
+        .nav-item:hover { background: #e0e7ff; color: var(--primary); }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+        .btn-publish-nav {
+            margin-top: 2rem; background: var(--primary); color: white; border: none;
+            padding: 1rem; border-radius: 100px; font-weight: 700; font-size: 1.1rem;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); transition: transform 0.2s;
+        }
+        .btn-publish-nav:hover { transform: translateY(-2px); }
+
+        /* ==========================================
+           COMPONENTE: TARJETA DE PROBLEMA (FEED)
+           ========================================== */
+        .feed-header { margin-bottom: 2rem; }
+        .feed-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .feed-header p { color: var(--text-muted); font-size: 1.1rem; }
+
+        .search-bar {
+            width: 100%; padding: 1.2rem 1.5rem; border-radius: 100px; border: 2px solid var(--border);
+            background: var(--surface); font-size: 1rem; font-family: inherit; margin: 1.5rem 0;
+            outline: none; transition: border-color 0.2s;
+        }
+        .search-bar:focus { border-color: var(--primary); }
+
+        .categories { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 1rem; scrollbar-width: none; }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-chip {
+            background: white; border: 1px solid var(--border); padding: 0.6rem 1.2rem;
+            border-radius: 100px; font-weight: 600; white-space: nowrap; cursor: pointer;
+            transition: all 0.2s; color: var(--text-muted);
+        }
+        .cat-chip:hover { border-color: var(--primary); color: var(--primary); }
+        .cat-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .problem-card {
+            background: var(--surface); border-radius: var(--radius); padding: 1.5rem;
+            margin-bottom: 1.5rem; box-shadow: var(--shadow); cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--border);
+        }
+        .problem-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+        
+        .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted); }
+        .card-cat { background: #f1f5f9; padding: 0.3rem 0.8rem; border-radius: 100px; font-weight: 600; color: var(--text-main); }
+        .card-hot { color: #f59e0b; font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
+
+        .card-title { font-size: 1.3rem; margin-bottom: 0.5rem; line-height: 1.4; }
+        .card-desc { color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        .card-actions { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 1rem; }
+        .action-group { display: flex; gap: 1rem; }
+        .action-btn { 
+            display: flex; align-items: center; gap: 0.5rem; background: none; border: none; 
+            color: var(--text-muted); font-weight: 600; font-size: 1rem; cursor: pointer; 
+            font-family: inherit; transition: color 0.2s;
+        }
+        .action-btn:hover { color: var(--text-main); }
+        
+        .btn-me-too {
+            background: #ffe4e6; color: var(--secondary); padding: 0.6rem 1.2rem;
+            border-radius: 100px; font-weight: 700; border: none; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-me-too:hover { background: #fda4af; }
+        .btn-me-too.clicked { background: var(--secondary); color: white; animation: pop 0.3s ease; }
+        
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* ==========================================
+           PANEL DERECHO (TENDENCIAS)
+           ========================================== */
+        .right-panel { position: sticky; top: 2rem; height: max-content; }
+        .trending-box { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .trending-box h3 { margin-bottom: 1.5rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
+        .trend-item { display: flex; gap: 1rem; margin-bottom: 1.2rem; cursor: pointer; }
+        .trend-rank { font-weight: 900; color: var(--border); font-size: 1.5rem; font-family: 'Outfit'; }
+        .trend-info h4 { font-size: 1rem; margin-bottom: 0.2rem; }
+        .trend-info p { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* ==========================================
+           PUBLICAR
+           ========================================== */
+        .publish-form { background: var(--surface); padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-control { width: 100%; padding: 1rem; border: 2px solid var(--border); border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        .form-control:focus { border-color: var(--primary); }
+        textarea.form-control { resize: vertical; min-height: 120px; }
+        .btn-submit { width: 100%; background: var(--primary); color: white; padding: 1.2rem; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+        .helper-text { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 1rem; }
+
+        /* ==========================================
+           PERFIL Y GAMIFICACIÓN
+           ========================================== */
+        .profile-header { text-align: center; margin-bottom: 2rem; }
+        .avatar { width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary), #a855f7); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; }
+        .level-badge { display: inline-block; background: #fef3c7; color: #d97706; padding: 0.4rem 1rem; border-radius: 100px; font-weight: 800; font-size: 0.9rem; margin-top: 0.5rem; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        .stat-box { background: var(--surface); padding: 1.5rem; border-radius: 16px; text-align: center; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .stat-num { font-size: 2rem; font-weight: 900; color: var(--primary); font-family: 'Outfit'; }
+        .stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+        /* ==========================================
+           DETALLE DEL PROBLEMA
+           ========================================== */
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 2rem; cursor: pointer; }
+        .back-link:hover { color: var(--primary); }
+        .detail-card { background: transparent; padding: 0; box-shadow: none; border: none; margin-bottom: 3rem; pointer-events: none; }
+        .solutions-section h3 { margin-bottom: 1.5rem; font-size: 1.5rem; }
+        .solution-card { background: var(--surface); padding: 1.5rem; border-radius: 16px; margin-bottom: 1rem; border: 1px solid var(--border); display: flex; gap: 1rem; }
+        .vote-col { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        .vote-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .vote-btn:hover { background: #e2e8f0; }
+
+        /* ==========================================
+           MAPA (Simulación CSS)
+           ========================================== */
+        .map-container { background: #e2e8f0; border-radius: var(--radius); height: 500px; position: relative; overflow: hidden; border: 4px solid white; box-shadow: var(--shadow); }
+        .map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; background-image: radial-gradient(#94a3b8 2px, transparent 2px); background-size: 30px 30px; }
+        .map-point { position: absolute; width: 24px; height: 24px; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px rgba(255,255,255,0.8); z-index: 10;}
+        .point-red { background: #ef4444; animation: pulseRed 2s infinite; }
+        .point-orange { background: #f97316; }
+        .point-green { background: #10b981; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
+        .map-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--text-main); color: white; padding: 1rem; border-radius: 12px; width: 200px; text-align: center; margin-bottom: 10px; display: none; z-index: 20;}
+        .map-point:hover .map-tooltip { display: block; }
+        
+        /* ==========================================
+           RESPONSIVE (Móvil)
+           ========================================== */
+        .bottom-nav { display: none; }
+
+        @media (max-width: 992px) {
+            .app-container { grid-template-columns: 1fr; padding: 1rem; padding-bottom: 6rem; }
+            .sidebar, .right-panel { display: none; }
+            
+            /* Navegación Inferior Móvil */
+            .bottom-nav {
+                display: flex; justify-content: space-around; align-items: center;
+                position: fixed; bottom: 0; left: 0; width: 100%; height: 70px;
+                background: var(--surface); box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+                z-index: 1000; border-top: 1px solid var(--border);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            .nav-item-mob {
+                display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+                color: var(--text-muted); text-decoration: none; font-size: 0.75rem; font-weight: 600;
+            }
+            .nav-item-mob.active { color: var(--primary); }
+            .nav-item-mob.active .icon { background: #e0e7ff; border-radius: 12px; padding: 0.4rem 1rem; }
+            .nav-item-mob .icon { font-size: 1.4rem; transition: background 0.2s; }
+            
+            /* Botón de publicar flotante central */
+            .nav-item-mob.publish-btn-mob .icon {
+                background: var(--primary); color: white; width: 50px; height: 50px;
+                border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                transform: translateY(-15px); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+                font-size: 1.8rem;
+            }
+            
+            .feed-header h1 { font-size: 1.8rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- SIDEBAR (Escritorio) -->
+        <aside class="sidebar">
+            <div class="brand">
+                <h1>¿A alguien<br>más le pasa?</h1>
+            </div>
+            <nav class="nav-menu">
+                <a class="nav-item active" onclick="switchView('home', this)">🏠 Inicio</a>
+                <a class="nav-item" onclick="switchView('map', this)">📍 Mapa de problemas</a>
+                <a class="nav-item" onclick="switchView('profile', this)">👤 Mi Perfil</a>
+            </nav>
+            <button class="btn-publish-nav" onclick="switchView('publish')">➕ Publicar problema</button>
+        </aside>
+
+        <!-- ÁREA CENTRAL (Vistas dinámicas) -->
+        <main class="main-content">
+            
+            <!-- VISTA: HOME / FEED -->
+            <div id="view-home" class="view active">
+                <div class="feed-header">
+                    <h2>Cuéntanos qué te está pasando.</h2>
+                    <p>Descubre si eres el único o si media facultad sufre lo mismo.</p>
+                    
+                    <input type="text" id="searchInput" class="search-bar" placeholder="🔍 ¿Qué problema tienes? (Ej. wifi, profesor...)" oninput="filterPosts()">
+                    
+                    <div class="categories">
+                        <div class="cat-chip active" onclick="filterCategory('Todos', this)">🌐 Todos</div>
+                        <div class="cat-chip" onclick="filterCategory('Clases', this)">📚 Clases</div>
+                        <div class="cat-chip" onclick="filterCategory('Instalaciones', this)">🏫 Instalaciones</div>
+                        <div class="cat-chip" onclick="filterCategory('Tecnología', this)">💻 Tecnología</div>
+                        <div class="cat-chip" onclick="filterCategory('Profesores', this)">👨‍🏫 Profesores</div>
+                        <div class="cat-chip" onclick="filterCategory('Cafetería', this)">🍽️ Cafetería</div>
+                    </div>
+                </div>
+
+                <div id="feed-container">
+                    <!-- Los posts se inyectan aquí via JS -->
+                </div>
+            </div>
+
+            <!-- VISTA: PUBLICAR -->
+            <div id="view-publish" class="view">
+                <div class="feed-header">
+                    <h1>¿Qué te pasa?</h1>
+                    <p>No hace falta escribir perfecto. Solo cuéntalo como se lo contarías a un amigo.</p>
+                </div>
+                
+                <div class="publish-form">
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="pub-cat" class="form-control">
+                            <option>📚 Clases</option>
+                            <option>🏫 Instalaciones</option>
+                            <option>💻 Tecnología</option>
+                            <option>👨‍🏫 Profesores</option>
+                            <option>🍽️ Cafetería</option>
+                            <option>💬 Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Universidad / Facultad</label>
+                        <select id="pub-uni" class="form-control">
+                            <option>Facultad de Ciencias</option>
+                            <option>Facultad de Letras</option>
+                            <option>Escuela de Ingeniería</option>
+                            <option>Facultad de Derecho</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Describe el problema</label>
+                        <textarea id="pub-desc" class="form-control" placeholder="Ej: Llevo media hora buscando aula y nadie sabe nada..."></textarea>
+                    </div>
+                    <button class="btn-submit" onclick="submitPost()">PUBLICAR</button>
+                    <p class="helper-text">Al publicar ganarás +5 puntos 🔥</p>
+                </div>
+            </div>
+
+            <!-- VISTA: DETALLE DEL PROBLEMA -->
+            <div id="view-detail" class="view">
+                <a class="back-link" onclick="switchView('home')">← Volver al muro</a>
+                
+                <div id="detail-post-container">
+                    <!-- El post detallado se inyecta aquí -->
+                </div>
+
+                <div class="solutions-section">
+                    <h3>💡 Posibles soluciones</h3>
+                    
+                    <!-- Formulario de solución -->
+                    <div class="form-group" style="display:flex; gap:1rem; margin-bottom: 2rem;">
+                        <input type="text" id="sol-input" class="form-control" placeholder="Propón una solución o truco...">
+                        <button class="btn-submit" style="width: auto; padding: 0 2rem;" onclick="addSolution()">Enviar</button>
+                    </div>
+
+                    <div id="solutions-container">
+                        <!-- Soluciones se inyectan aquí -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: MAPA -->
+            <div id="view-map" class="view">
+                <div class="feed-header">
+                    <h1>Mapa de problemas</h1>
+                    <p>Visualiza dónde se concentran las quejas en tiempo real.</p>
+                </div>
+                
+                <div class="map-container">
+                    <div class="map-bg"></div>
+                    
+                    <!-- Puntos simulados -->
+                    <div class="map-point point-red" style="top: 30%; left: 40%;">
+                        <div class="map-tooltip"><strong>Biblioteca</strong><br>34 problemas<br><span style="font-size:0.8rem">Falta de enchufes, calor.</span></div>
+                    </div>
+                    <div class="map-point point-orange" style="top: 60%; left: 70%;">
+                        <div class="map-tooltip"><strong>Cafetería</strong><br>15 problemas<br><span style="font-size:0.8rem">Máquinas rotas, colas.</span></div>
+                    </div>
+                    <div class="map-point point-green" style="top: 20%; left: 80%;">
+                        <div class="map-tooltip"><strong>Aulario 1</strong><br>3 problemas<br><span style="font-size:0.8rem">Proyector no enciende.</span></div>
+                    </div>
+                    <div class="map-point point-red" style="top: 75%; left: 25%;">
+                        <div class="map-tooltip"><strong>Secretaría</strong><br>42 problemas<br><span style="font-size:0.8rem">Horarios, matrículas cerradas.</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: PERFIL -->
+            <div id="view-profile" class="view">
+                <div class="profile-header">
+                    <div class="avatar">👨‍🎓</div>
+                    <h1>Luis Martínez</h1>
+                    <div class="level-badge">🕵️ Investigador</div>
+                    <p style="margin-top: 0.5rem; color: var(--text-muted); font-weight: bold;">🔥 <span id="user-points">243</span> puntos</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-num" id="user-posts">12</div>
+                        <div class="stat-label">Problemas</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" id="user-sols">18</div>
+                        <div class="stat-label">Soluciones</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" id="user-sups">64</div>
+                        <div class="stat-label">Apoyados</div>
+                    </div>
+                </div>
+                
+                <h3>🏆 Logros desbloqueados</h3>
+                <div style="display:flex; gap:1rem; margin-top:1rem; flex-wrap:wrap;">
+                    <div style="background:white; padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;"><span style="font-size:1.5rem">🎯</span> Primer problema</div>
+                    <div style="background:white; padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;"><span style="font-size:1.5rem">💡</span> Solucionador nato</div>
+                    <div style="background:white; padding:1rem; border-radius:12px; border:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;"><span style="font-size:1.5rem">👥</span> Voz del pueblo</div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- PANEL DERECHO (Escritorio) -->
+        <aside class="right-panel">
+            <div class="trending-box">
+                <h3>🔥 Lo que más molesta</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Campus Principal • Esta semana</p>
+                
+                <div id="trending-container">
+                    <!-- Se inyecta por JS -->
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- NAVEGACIÓN INFERIOR (Móvil) -->
+    <nav class="bottom-nav">
+        <a class="nav-item-mob active" onclick="switchView('home', this)">
+            <span class="icon">🏠</span>
+            <span>Inicio</span>
+        </a>
+        <a class="nav-item-mob" onclick="switchView('map', this)">
+            <span class="icon">📍</span>
+            <span>Mapa</span>
+        </a>
+        <a class="nav-item-mob publish-btn-mob" onclick="switchView('publish', this)">
+            <span class="icon">➕</span>
+        </a>
+        <a class="nav-item-mob" onclick="switchView('profile', this)">
+            <span class="icon">👤</span>
+            <span>Perfil</span>
+        </a>
+    </nav>
+
+    <!-- ==========================================
+         LÓGICA JAVASCRIPT
+         ========================================== -->
+    <script>
+        // --- ESTADO Y DATOS DE PRUEBA ---
+        let currentCategory = 'Todos';
+        let currentPostId = null;
+        let currentUser = { points: 243, posts: 12, sols: 18, sups: 64 };
+
+        const posts = [
+            { id: 1, cat: '💻 Tecnología', title: 'La WiFi Eduroam no conecta nunca', desc: 'Llevo 3 días gastando mis datos porque es imposible conectarse a la red en la biblioteca central. ¿Soy el único?', meToo: 342, comments: 45, uni: 'Facultad de Ciencias', hot: true, solutions: [
+                {text: "Borra la red y vuelve a meter las credenciales con @tu.uni.edu", votes: 89},
+                {text: "Siéntate cerca de la ventana, a veces coge red de la calle 😂", votes: 12}
+            ]},
+            { id: 2, cat: '🏫 Instalaciones', title: 'No hay suficientes enchufes en la biblioteca', desc: 'Llegas a las 9 am, te sientas y oh sorpresa, el único enchufe de la mesa no funciona o ya está pillado. Misión imposible cargar el portátil.', meToo: 287, comments: 22, uni: 'Biblioteca General', hot: true, solutions: [
+                {text: "Llévate una regleta pequeña en la mochila, te haces amigo de toda la mesa.", votes: 156}
+            ]},
+            { id: 3, cat: '👨‍🏫 Profesores', title: 'El profesor cambia las fechas constantemente', desc: 'Primero el parcial era el día 15, luego el 20, ahora dice que igual lo quita y evalúa con trabajo. Nunca sé a qué atenerme.', meToo: 231, comments: 34, uni: 'Facultad de Derecho', hot: true, solutions: []},
+            { id: 4, cat: '🍽️ Cafetería', title: 'La máquina de café lleva dos semanas sin funcionar', desc: 'No pido mucho, solo un líquido caliente con cafeína para sobrevivir a la clase de las 8 am. La máquina del pasillo 3 sigue tragándose las monedas.', meToo: 184, comments: 15, uni: 'Escuela de Ingeniería', hot: false, solutions: []},
+            { id: 5, cat: '📚 Clases', title: '¿Soy el único que no entiende qué quiere el profesor en el TFG?', desc: 'Cada tutoría me dice una cosa distinta. Hago A y me pide B, hago B y me dice que por qué quité A. Socorro.', meToo: 156, comments: 28, uni: 'Facultad de Letras', hot: false, solutions: []},
+            { id: 6, cat: '🏫 Instalaciones', title: 'Hace un frío polar en el Aulario 4', desc: 'No sé si estoy en la universidad o en una expedición al Ártico. Llevo abrigo, bufanda y tiemblo en clase.', meToo: 112, comments: 8, uni: 'Aulario Sur', hot: false, solutions: []},
+            { id: 7, cat: '📚 Clases', title: 'Nunca sé cuándo abren las matrículas', desc: 'La web oficial es un laberinto. Deberían mandar un triste email diciendo "Oye, ya puedes matricularte".', meToo: 98, comments: 12, uni: 'Secretaría General', hot: false, solutions: []},
+            { id: 8, cat: '💻 Tecnología', title: 'Campus Virtual caído justo antes de la entrega', desc: 'Típico, tienes hasta las 23:59, intentas subirlo a las 23:45 y la página devuelve Error 502.', meToo: 405, comments: 88, uni: 'Toda la uni', hot: true, solutions: [
+                {text: "Mándalo por email al profe adjuntando captura del error.", votes: 230}
+            ]},
+            { id: 9, cat: '👨‍🏫 Profesores', title: 'Diapositivas llenas de texto ilegible', desc: 'El profesor lee literalmente lo que pone en un PowerPoint con letra tamaño 10 y fondo amarillo.', meToo: 87, comments: 5, uni: 'Facultad de Ciencias', hot: false, solutions: []},
+            { id: 10, cat: '🍽️ Cafetería', title: 'El microondas huele raro', desc: 'Alguien calentó pescado la semana pasada y el olor se ha quedado impregnado. Es insoportable.', meToo: 65, comments: 19, uni: 'Comedor Central', hot: false, solutions: []},
+            { id: 11, cat: '🏫 Instalaciones', title: 'Las sillas de las aulas nuevas destrozan la espalda', desc: 'Muy modernas, muy nórdicas, pero tras 2 horas sentado ahí tienes que pedir cita en el fisio.', meToo: 143, comments: 21, uni: 'Facultad de Derecho', hot: false, solutions: []},
+            { id: 12, cat: '📚 Clases', title: 'Coinciden los exámenes finales', desc: 'Tengo dos exámenes el mismo día con 1 hora de diferencia. La jefatura de estudios se ha lucido.', meToo: 76, comments: 11, uni: 'Escuela de Ingeniería', hot: false, solutions: []},
+            { id: 13, cat: '💻 Tecnología', title: 'Los PCs de la sala de ordenadores tardan 10 min en encender', desc: 'Windows está actualizando... desde 2018.', meToo: 198, comments: 14, uni: 'Aulario Norte', hot: false, solutions: []},
+            { id: 14, cat: '👨‍🏫 Profesores', title: 'No responde a los emails de tutoría', desc: 'Le escribí hace una semana para revisar el examen y sigo esperando.', meToo: 120, comments: 17, uni: 'Facultad de Letras', hot: false, solutions: []},
+            { id: 15, cat: '💬 Otros', title: 'El parking está lleno a las 8:15 am', desc: 'Si no llegas de madrugada, olvídate de aparcar en el campus. Toca dejar el coche a 20 minutos andando.', meToo: 210, comments: 33, uni: 'Campus Principal', hot: true, solutions: []},
+        ];
+
+        // --- FUNCIONES DE RENDERIZADO ---
+        function renderFeed(filterText = '') {
+            const container = document.getElementById('feed-container');
+            container.innerHTML = '';
+            
+            let filtered = posts.filter(p => 
+                (currentCategory === 'Todos' || p.cat.includes(currentCategory)) &&
+                (p.title.toLowerCase().includes(filterText.toLowerCase()) || p.desc.toLowerCase().includes(filterText.toLowerCase()))
+            );
+
+            if(filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:3rem; color:var(--text-muted);">No hay problemas que coincidan. ¡Sé el primero en publicarlo!</div>';
+                return;
+            }
+
+            filtered.forEach(post => {
+                const hotTag = post.hot ? `<span class="card-hot">🔥 Tendencia</span>` : '';
+                container.innerHTML += `
+                    <div class="problem-card" onclick="openDetail(${post.id}, event)">
+                        <div class="card-meta">
+                            <span class="card-cat">${post.cat}</span>
+                            <span>📍 ${post.uni}</span>
+                            ${hotTag}
+                        </div>
+                        <h3 class="card-title">${post.title}</h3>
+                        <p class="card-desc">${post.desc}</p>
+                        <div class="card-actions">
+                            <div class="action-group">
+                                <span class="action-btn">💬 ${post.comments}</span>
+                            </div>
+                            <button class="btn-me-too" onclick="meToo(${post.id}, event, this)">
+                                ❤️ <span>${post.meToo} A mí también</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTrending() {
+            const container = document.getElementById('trending-container');
+            let sorted = [...posts].sort((a, b) => b.meToo - a.meToo).slice(0, 5);
+            container.innerHTML = '';
+            sorted.forEach((p, i) => {
+                container.innerHTML += `
+                    <div class="trend-item" onclick="openDetail(${p.id}, event)">
+                        <div class="trend-rank">${i+1}</div>
+                        <div class="trend-info">
+                            <h4>${p.title.substring(0, 30)}...</h4>
+                            <p>${p.meToo} personas sufren esto</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- INTERACCIONES ---
+        function switchView(viewId, navElement = null) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            
+            // Actualizar active state en menú de PC y Móvil
+            if(navElement) {
+                document.querySelectorAll('.nav-item, .nav-item-mob').forEach(n => n.classList.remove('active'));
+                navElement.classList.add('active');
+            }
+            window.scrollTo(0,0);
+        }
+
+        function filterCategory(cat, element) {
+            document.querySelectorAll('.cat-chip').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            currentCategory = cat;
+            renderFeed(document.getElementById('searchInput').value);
+        }
+
+        function filterPosts() {
+            renderFeed(document.getElementById('searchInput').value);
+        }
+
+        function meToo(id, event, btnElement) {
+            event.stopPropagation(); // Evitar abrir detalle
+            const post = posts.find(p => p.id === id);
+            
+            if(!btnElement.classList.contains('clicked')) {
+                post.meToo++;
+                btnElement.classList.add('clicked');
+                btnElement.innerHTML = `❤️ <span>${post.meToo} A mí también</span>`;
+                
+                // Gamificación local simulada
+                currentUser.sups++;
+                currentUser.points += 1;
+                updateProfileStats();
+                renderTrending(); // Actualizar ranking
+            }
+        }
+
+        function submitPost() {
+            const cat = document.getElementById('pub-cat').value;
+            const uni = document.getElementById('pub-uni').value;
+            const desc = document.getElementById('pub-desc').value;
+            
+            if(desc.trim() === '') return alert('Escribe cuál es tu problema.');
+
+            posts.unshift({
+                id: Date.now(),
+                cat: cat, title: desc.split('.')[0] || 'Nuevo problema', desc: desc,
+                meToo: 1, comments: 0, uni: uni, hot: false, solutions: []
+            });
+
+            document.getElementById('pub-desc').value = '';
+            
+            // Puntos
+            currentUser.posts++;
+            currentUser.points += 5;
+            updateProfileStats();
+
+            switchView('home');
+            document.querySelector('.nav-item').classList.add('active');
+            renderFeed();
+            
+            alert('¡Problema publicado! Ganaste +5 puntos.');
+        }
+
+        // --- VISTA DE DETALLE ---
+        function openDetail(id, event) {
+            if(event) event.stopPropagation();
+            currentPostId = id;
+            const post = posts.find(p => p.id === id);
+            
+            const container = document.getElementById('detail-post-container');
+            container.innerHTML = `
+                <div class="problem-card detail-card">
+                    <div class="card-meta">
+                        <span class="card-cat">${post.cat}</span>
+                        <span>📍 ${post.uni}</span>
+                    </div>
+                    <h1 style="font-size:2.5rem; margin-bottom:1rem; line-height:1.2;">${post.title}</h1>
+                    <p style="font-size:1.2rem; color:var(--text-muted); margin-bottom:2rem; line-height:1.6;">${post.desc}</p>
+                    
+                    <button class="btn-submit" style="background:var(--secondary);" onclick="meToo(${post.id}, event, this)">
+                        🔥 ¡A MÍ TAMBIÉN ME PASA! (${post.meToo})
+                    </button>
+                </div>
+            `;
+
+            renderSolutions(post.solutions);
+            switchView('detail');
+        }
+
+        function renderSolutions(solutions) {
+            const container = document.getElementById('solutions-container');
+            container.innerHTML = '';
+            
+            if(solutions.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:2rem;">Aún no hay soluciones. ¡Sé el primero en ayudar!</p>';
+                return;
+            }
+
+            // Ordenar por votos
+            solutions.sort((a,b) => b.votes - a.votes).forEach((sol, i) => {
+                container.innerHTML += `
+                    <div class="solution-card">
+                        <div class="vote-col">
+                            <button class="vote-btn" onclick="voteSolution(${i})">▲</button>
+                            <span style="font-weight:900; color:var(--primary);">${sol.votes}</span>
+                        </div>
+                        <div>
+                            <span style="font-size:0.85rem; color:var(--text-muted); font-weight:bold;">SOLUCIÓN PROPUESTA</span>
+                            <p style="margin-top:0.3rem;">${sol.text}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function addSolution() {
+            const input = document.getElementById('sol-input');
+            if(input.value.trim() === '') return;
+            
+            const post = posts.find(p => p.id === currentPostId);
+            post.solutions.push({ text: input.value, votes: 0 });
+            
+            currentUser.sols++;
+            currentUser.points += 2;
+            updateProfileStats();
+
+            input.value = '';
+            renderSolutions(post.solutions);
+        }
+
+        function voteSolution(index) {
+            const post = posts.find(p => p.id === currentPostId);
+            post.solutions[index].votes++;
+            renderSolutions(post.solutions);
+        }
+
+        function updateProfileStats() {
+            document.getElementById('user-points').innerText = currentUser.points;
+            document.getElementById('user-posts').innerText = currentUser.posts;
+            document.getElementById('user-sols').innerText = currentUser.sols;
+            document.getElementById('user-sups').innerText = currentUser.sups;
+        }
+
+        // Inicialización
+        renderFeed();
+        renderTrending();
+        updateProfileStats();
+    </script>
+</body>
+</html>
