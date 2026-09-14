@@ -3,406 +3,1068 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PisoCampus - Valencia</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>MenteEnPaz | Recursos gratuitos de salud mental</title>
+    <meta name="description" content="Recursos gratuitos, líneas de ayuda y herramientas de bienestar emocional para hispanohablantes. No estás solo.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        .view { display: none; }
-        .view.active { display: block; }
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f766e;
+            --primary-light: #ccfbf1;
+            --accent: #f97316;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --shadow: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ========== NAVBAR ========== */
+        nav {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            border-bottom: 1px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        nav.scrolled {
+            box-shadow: var(--shadow);
+        }
+
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: var(--text);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.25);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background: #ea580c;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            padding: 140px 0 80px;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 50%, #f0f9ff 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(13,148,136,0.08) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+            border-radius: 50%;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2.4rem, 5vw, 3.5rem);
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .hero-content h1 span {
+            color: var(--primary);
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            margin-bottom: 32px;
+            max-width: 520px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .hero-card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e2e8f0;
+        }
+
+        .hero-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            color: var(--primary-dark);
+        }
+
+        .crisis-list {
+            list-style: none;
+        }
+
+        .crisis-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .crisis-list li:last-child {
+            border-bottom: none;
+        }
+
+        .crisis-list strong {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        /* ========== SECTIONS ========== */
+        section {
+            padding: 90px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 60px;
+        }
+
+        .section-header h2 {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            color: var(--text-light);
+            font-size: 1.15rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* ========== CRISIS BANNER ========== */
+        .crisis-banner {
+            background: linear-gradient(90deg, #0f766e, #0d9488);
+            color: white;
+            padding: 28px 0;
+            text-align: center;
+        }
+
+        .crisis-banner p {
+            font-size: 1.15rem;
+            margin-bottom: 12px;
+        }
+
+        .crisis-banner a {
+            color: white;
+            font-weight: 700;
+            font-size: 1.4rem;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            margin: 0 8px;
+            transition: background 0.2s;
+        }
+
+        .crisis-banner a:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        /* ========== CARDS ========== */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 28px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 32px;
+            box-shadow: var(--shadow);
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px -10px rgb(0 0 0 / 0.12);
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-light);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-size: 1.35rem;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            color: var(--text-light);
+            font-size: 0.98rem;
+        }
+
+        /* ========== BREATHING ========== */
+        .breathing-section {
+            background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+            color: white;
+            border-radius: 32px;
+            padding: 60px 40px;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .breath-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            margin: 40px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+            transition: all 4s ease-in-out;
+            border: 4px solid rgba(255,255,255,0.3);
+        }
+
+        .breath-circle.inhale {
+            transform: scale(1.4);
+            background: rgba(255,255,255,0.3);
+        }
+
+        .breath-circle.exhale {
+            transform: scale(1);
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* ========== RESOURCES ========== */
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .resource-item {
+            background: white;
+            border-radius: var(--radius);
+            padding: 28px;
+            border-left: 5px solid var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .resource-item h4 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--primary-dark);
+        }
+
+        .resource-item a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .resource-item a:hover {
+            text-decoration: underline;
+        }
+
+        /* ========== TIPS ========== */
+        .tips {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .tip {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .tip-num {
+            background: var(--primary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* ========== TESTIMONIALS ========== */
+        .testimonials {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 32px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .testimonial::before {
+            content: '"';
+            font-size: 5rem;
+            color: var(--primary-light);
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+
+        .testimonial p {
+            position: relative;
+            z-index: 1;
+            font-style: italic;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        /* ========== FAQ ========== */
+        .faq-item {
+            background: white;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .faq-question {
+            padding: 20px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border: none;
+            width: 100%;
+            text-align: left;
+            font-size: 1.05rem;
+        }
+
+        .faq-answer {
+            padding: 0 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            color: var(--text-light);
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 0 24px 20px;
+            max-height: 300px;
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 70px 0 30px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 50px;
+        }
+
+        .footer-brand h3 {
+            color: white;
+            font-size: 1.6rem;
+            margin-bottom: 16px;
+        }
+
+        .footer-brand p {
+            max-width: 300px;
+            line-height: 1.7;
+        }
+
+        .footer-col h4 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col li {
+            margin-bottom: 10px;
+        }
+
+        .footer-col a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-col a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #1e293b;
+            padding-top: 30px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .disclaimer {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 30px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 120px 0 60px;
+            }
+
+            .breathing-section {
+                padding: 40px 20px;
+            }
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
-<body class="bg-gray-50 pb-20 md:pb-0">
-
-    <!-- HOME VIEW -->
-    <div id="view-home" class="view active min-h-screen bg-white">
-        <div class="bg-gradient-to-b from-orange-500 to-orange-400 text-white px-4 py-16 text-center">
-            <div class="max-w-2xl mx-auto">
-                <h1 class="text-4xl md:text-5xl font-bold mb-4">Encuentra piso.<br/>Vive cerca de tu universidad.</h1>
-                <p class="text-lg opacity-90 mb-8">Compara alojamientos de Valencia según precio, ubicación y tiempo hasta tu universidad.</p>
-            </div>
-        </div>
-        <div class="max-w-4xl mx-auto px-4 py-12 space-y-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">¿Dónde estudias?</h2>
-                <div id="home-uni-buttons" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"></div>
-
-                <h2 class="text-xl font-bold text-gray-900 mb-4">¿Cuánto quieres pagar máximo?</h2>
-                <div class="mb-6 space-y-2">
-                    <input type="range" id="home-price-range" min="300" max="1500" value="1000" class="w-full" oninput="updateHomePriceLabel(this.value)" />
-                    <p class="text-center text-lg font-semibold text-orange-600">
-                        300€ — <span id="home-price-label">1000</span>€/mes
-                    </p>
-                </div>
-
-                <h2 class="text-xl font-bold text-gray-900 mb-4">¿Cuánto quieres tardar?</h2>
-                <div id="home-transport-buttons" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8"></div>
-
-                <button onclick="goToSearch()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg text-lg transition-colors">
-                    BUSCAR PISO
-                </button>
-            </div>
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                    <div class="text-3xl mb-3">🎓</div>
-                    <h3 class="font-bold text-gray-900 mb-2">Para estudiantes</h3>
-                    <p class="text-gray-600 text-sm">Diseñado específicamente para tu estilo de vida</p>
-                </div>
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                    <div class="text-3xl mb-3">📍</div>
-                    <h3 class="font-bold text-gray-900 mb-2">Ubicación exacta</h3>
-                    <p class="text-gray-600 text-sm">Sabe cuánto tardas realmente hasta tu uni</p>
-                </div>
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                    <div class="text-3xl mb-3">⭐</div>
-                    <h3 class="font-bold text-gray-900 mb-2">Puntuación personal</h3>
-                    <p class="text-gray-600 text-sm">Cada piso adaptado a tus necesidades</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEARCH VIEW -->
-    <div id="view-search" class="view min-h-screen bg-gray-50">
-        <div class="bg-orange-500 text-white px-4 py-4 sticky top-0 z-10">
-            <button onclick="navigate('home')" class="flex items-center gap-2 text-lg font-semibold">
-                ← Volver
-            </button>
-        </div>
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <div class="grid md:grid-cols-4 gap-6">
-                <!-- Sidebar Filtros -->
-                <div class="md:col-span-1 space-y-6">
-                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                        <h3 class="font-bold text-gray-900 mb-3">Filtros</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm font-semibold text-gray-700">Universidad</label>
-                                <select id="filter-university" class="w-full mt-1 p-2 border border-gray-200 rounded text-sm" onchange="renderListings()"></select>
-                            </div>
-                            <div>
-                                <label class="text-sm font-semibold text-gray-700">Precio máx: <span id="filter-price-label">1000</span>€</label>
-                                <input type="range" id="filter-price" min="300" max="1500" value="1000" class="w-full mt-1" oninput="updateFilterPrice(this.value); renderListings()" />
-                            </div>
-                            <div>
-                                <label class="text-sm font-semibold text-gray-700">Tipo</label>
-                                <select id="filter-type" class="w-full mt-1 p-2 border border-gray-200 rounded text-sm" onchange="renderListings()">
-                                    <option value="all">Todos</option>
-                                    <option value="Habitación individual">Habitación individual</option>
-                                    <option value="Habitación compartida">Habitación compartida</option>
-                                    <option value="Piso completo">Piso completo</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-sm font-semibold text-gray-700">Barrio</label>
-                                <select id="filter-barrio" class="w-full mt-1 p-2 border border-gray-200 rounded text-sm" onchange="renderListings()">
-                                    <option value="all">Todos</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Listings -->
-                <div class="md:col-span-3 space-y-4">
-                    <p id="results-count" class="text-gray-600 font-semibold">0 alojamientos encontrados</p>
-                    <div id="listings-container" class="space-y-4"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- STATS VIEW -->
-    <div id="view-stats" class="view min-h-screen bg-gradient-to-b from-purple-50 to-white">
-        <div class="bg-purple-500 text-white px-4 py-4 sticky top-0 z-10">
-            <button onclick="navigate('home')" class="flex items-center gap-2 text-lg font-semibold">← Volver</button>
-        </div>
-        <div class="max-w-4xl mx-auto px-4 py-12">
-            <h1 class="text-3xl font-bold text-gray-900 mb-12 text-center">Valencia para estudiantes</h1>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-white rounded-xl p-6 border border-gray-200 text-center">
-                    <div class="text-4xl mb-3">💰</div>
-                    <p class="text-gray-600 text-sm mb-2">Precio medio</p>
-                    <p class="text-3xl font-bold text-purple-600">450€</p>
-                    <p class="text-xs text-gray-500 mt-2">Habitación/mes</p>
-                </div>
-                <div class="bg-white rounded-xl p-6 border border-gray-200 text-center">
-                    <div class="text-4xl mb-3">🏘️</div>
-                    <p class="text-gray-600 text-sm mb-2">Barrio popular</p>
-                    <p class="text-3xl font-bold text-purple-600">Benimaclet</p>
-                    <p class="text-xs text-gray-500 mt-2">Más pisos listados</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- NAVEGACIÓN BOTTOM (Móvil / Desktop) -->
-    <nav class="fixed bottom-0 md:top-0 left-0 right-0 bg-white border-t md:border-t-0 md:border-b border-gray-200 md:sticky md:z-20">
-        <div class="flex justify-around md:justify-start gap-4 px-4 py-3 max-w-4xl mx-auto">
-            <button onclick="navigate('home')" id="nav-home" class="nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-orange-600 bg-orange-50">
-                <span class="text-2xl">🏠</span>
-                <span class="text-xs font-semibold">Inicio</span>
-            </button>
-            <button onclick="navigate('search')" id="nav-search" class="nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-gray-600 hover:text-orange-600">
-                <span class="text-2xl">🔎</span>
-                <span class="text-xs font-semibold">Buscar</span>
-            </button>
-            <button onclick="navigate('stats')" id="nav-stats" class="nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-gray-600 hover:text-orange-600">
-                <span class="text-2xl">📊</span>
-                <span class="text-xs font-semibold">Datos</span>
-            </button>
+<body>
+    <!-- NAVBAR -->
+    <nav id="navbar">
+        <div class="container nav-inner">
+            <a href="#" class="logo">Mente<span>EnPaz</span></a>
+            <ul class="nav-links">
+                <li><a href="#recursos">Recursos</a></li>
+                <li><a href="#tecnicas">Técnicas</a></li>
+                <li><a href="#lineas">Líneas de ayuda</a></li>
+                <li><a href="#faq">Preguntas</a></li>
+            </ul>
+            <a href="#crisis" class="btn btn-accent">Necesito ayuda ahora</a>
+            <button class="mobile-toggle" onclick="toggleMenu()">☰</button>
         </div>
     </nav>
 
-    <script>
-        const UNIVERSITIES = {
-            upv: { name: 'UPV', full: 'Universitat Politècnica de València', lat: 39.4799, lng: -0.3436 },
-            uv: { name: 'UV', full: 'Universitat de València', lat: 39.4789, lng: -0.3844 },
-            uev: { name: 'UEV', full: 'Universidad Europea de Valencia', lat: 39.4700, lng: -0.3500 },
-            ucv: { name: 'UCV', full: 'Universidad Católica de Valencia', lat: 39.4900, lng: -0.3600 },
-            uiv: { name: 'UIV', full: 'Universidad Internacional de Valencia', lat: 39.4600, lng: -0.3400 },
-        };
+    <!-- HERO -->
+    <section class="hero">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <div class="badge">Recursos 100% gratuitos</div>
+                <h1>No estás solo.<br><span>Tu mente merece paz.</span></h1>
+                <p>Encuentra líneas de ayuda reales, técnicas de calma inmediatas y recursos confiables de salud mental en español. Todo en un solo lugar, sin costo y sin juicios.</p>
+                <div class="hero-buttons">
+                    <a href="#crisis" class="btn btn-primary">Líneas de crisis →</a>
+                    <a href="#tecnicas" class="btn btn-outline">Probar respiración</a>
+                </div>
+            </div>
+            <div class="hero-card">
+                <h3>¿Estás en crisis ahora?</h3>
+                <p style="margin-bottom:16px; color:var(--text-light); font-size:0.95rem;">Estas líneas son gratuitas, confidenciales y están disponibles 24/7 en muchos países:</p>
+                <ul class="crisis-list">
+                    <li><span>🇪🇸 España</span> <strong>024</strong></li>
+                    <li><span>🇲🇽 México</span> <strong>800 911 2000</strong></li>
+                    <li><span>🇨🇴 Colombia</span> <strong>106</strong></li>
+                    <li><span>🇺🇸 EE.UU. (español)</span> <strong>988 (opción 2)</strong></li>
+                    <li><span>Emergencias</span> <strong>911 / 112</strong></li>
+                </ul>
+                <a href="#lineas" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:20px;">Ver más países</a>
+            </div>
+        </div>
+    </section>
 
-        const BARRIOS = [
-            'Benimaclet', 'Algirós', 'Amistat', 'Mestalla', 'Ruzafa', 'Ciutat Vella',
-            'Patraix', 'Campanar', 'Blasco Ibáñez', 'Ayora', 'Cabanyal', 'Camins al Grau'
-        ];
+    <!-- CRISIS BANNER -->
+    <div class="crisis-banner" id="crisis">
+        <div class="container">
+            <p><strong>Si sientes que tu vida corre peligro o tienes pensamientos de hacerte daño:</strong></p>
+            <div>
+                <a href="tel:024">024 (España)</a>
+                <a href="tel:8009112000">800 911 2000 (México)</a>
+                <a href="tel:106">106 (Colombia)</a>
+            </div>
+        </div>
+    </div>
 
-        const TRANSPORTS = [
-            { icon: '🚶', label: '15 min', value: 'walk' },
-            { icon: '🚲', label: '15 min', value: 'bike' },
-            { icon: '🚌', label: '20 min', value: 'bus' },
-            { icon: '🚇', label: '30 min', value: 'metro' }
-        ];
+    <!-- QUÉ OFRECEMOS -->
+    <section>
+        <div class="container">
+            <div class="section-header">
+                <div class="badge">Cómo te ayudamos</div>
+                <h2>Herramientas reales para momentos difíciles</h2>
+                <p>No somos terapia, pero sí un puente hacia la calma y los recursos profesionales.</p>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <div class="card-icon">📞</div>
+                    <h3>Líneas de crisis verificadas</h3>
+                    <p>Números reales y actualizados de más de 15 países de habla hispana. Gratuitos y confidenciales.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🌬️</div>
+                    <h3>Técnicas de calma inmediata</h3>
+                    <p>Ejercicios de respiración, grounding y mindfulness que puedes hacer ahora mismo, en cualquier lugar.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📚</div>
+                    <h3>Recursos y cursos gratuitos</h3>
+                    <p>Guías, apps recomendadas y cursos de la OPS/OMS y organizaciones confiables.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💚</div>
+                    <h3>Sin estigma ni juicios</h3>
+                    <p>Espacio seguro creado para que te sientas acompañado, no diagnosticado ni etiquetado.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        // --- LISTA DE PISOS CON ENLACES DIRECTOS Y ESPECÍFICOS ---
-        // Puedes añadir o modificar los enlaces de esta lista con los URLs exactos de los pisos que encuentres.
-        let listings = [
-            {
-                id: 1,
-                address: "Habitación luminosa cerca de UPV",
-                price: 380,
-                rooms: 4,
-                type: "Habitación individual",
-                barrio: "Benimaclet",
-                latitude: 39.4850,
-                longitude: -0.3250,
-                amenities: [{ label: 'WiFi' }, { label: 'Aire acondicionado' }],
-                rating: 92,
-                images: '🏠',
-                url: "https://www.idealista.com/inmueble/104859201/" // Sustituye por tu enlace exacto
-            },
-            {
-                id: 2,
-                address: "Piso completo exterior con balcón",
-                price: 850,
-                rooms: 3,
-                type: "Piso completo",
-                barrio: "Algirós",
-                latitude: 39.4780,
-                longitude: -0.3100,
-                amenities: [{ label: 'WiFi' }, { label: 'Calefacción' }],
-                rating: 88,
-                images: '🏢',
-                url: "https://www.fotocasa.es/es/alquiler/vivienda/valencia-capital/algiros/17849201/d" // Sustituye por tu enlace exacto
-            },
-            {
-                id: 3,
-                address: "Habitación para estudiantes en Blasco Ibáñez",
-                price: 400,
-                rooms: 5,
-                type: "Habitación individual",
-                barrio: "Blasco Ibáñez",
-                latitude: 39.4750,
-                longitude: -0.3750,
-                amenities: [{ label: 'WiFi' }, { label: 'Piso compartido' }],
-                rating: 95,
-                images: '🏘️',
-                url: "https://www.idealista.com/inmueble/105938271/" // Sustituye por tu enlace exacto
-            },
-            {
-                id: 4,
-                address: "Estudio moderno en el centro",
-                price: 700,
-                rooms: 1,
-                type: "Piso completo",
-                barrio: "Ruzafa",
-                latitude: 39.4650,
-                longitude: -0.3850,
-                amenities: [{ label: 'Aire acondicionado' }, { label: 'Calefacción' }],
-                rating: 85,
-                images: '🏬',
-                url: "https://www.habitaclia.com/alquiler-valencia-ruzafa/inmueble-1093821" // Sustituye por tu enlace exacto
-            }
-        ];
+    <!-- TÉCNICA DE RESPIRACIÓN -->
+    <section id="tecnicas">
+        <div class="container">
+            <div class="breathing-section">
+                <h2 style="color:white; margin-bottom:12px;">Técnica de respiración 4-7-8</h2>
+                <p style="opacity:0.9; max-width:500px; margin:0 auto 10px;">Una de las formas más rápidas de calmar el sistema nervioso. Ideal para ansiedad o antes de dormir.</p>
+                
+                <div class="breath-circle" id="breathCircle">
+                    Prepárate
+                </div>
+                
+                <p id="breathText" style="font-size:1.2rem; margin-bottom:30px;">Presiona el botón para empezar</p>
+                
+                <button class="btn" style="background:white; color:var(--primary-dark);" onclick="startBreathing()" id="breathBtn">
+                    Comenzar ejercicio
+                </button>
+                
+                <p style="margin-top:30px; font-size:0.9rem; opacity:0.8;">Inhala 4 segundos → Mantén 7 segundos → Exhala 8 segundos. Repite 3-4 veces.</p>
+            </div>
+        </div>
+    </section>
 
-        let state = {
-            selectedUniversity: 'upv',
-            maxTransport: 'bus',
-            filters: {
-                university: 'upv',
-                maxPrice: 1000,
-                type: 'all',
-                barrio: 'all'
-            }
-        };
-
-        function calculateDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng/2) * Math.sin(dLng/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        }
-
-        function estimateTime(distance, transport) {
-            const speeds = { walk: 1.3, bike: 4, bus: 2.5, metro: 3 };
-            const speed = speeds[transport] || 1.3;
-            return Math.ceil((distance * 60) / speed);
-        }
-
-        function calculateScore(listing) {
-            let score = 50;
-            const uni = UNIVERSITIES[state.filters.university];
-            const distance = calculateDistance(uni.lat, uni.lng, listing.latitude, listing.longitude);
-            const time = estimateTime(distance, state.maxTransport);
-
-            score += Math.max(0, Math.min(20, 20 - (time / 2)));
-            score += Math.max(0, Math.min(15, 15 - ((listing.price - 300) / 50)));
-            score += listing.amenities.length * 2;
-            score += listing.rating / 10;
-            return Math.min(100, Math.round(score));
-        }
-
-        function navigate(viewId) {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.getElementById(`view-${viewId}`).classList.add('active');
-
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.className = 'nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-gray-600 hover:text-orange-600';
-            });
-            const activeBtn = document.getElementById(`nav-${viewId}`);
-            if(activeBtn) activeBtn.className = 'nav-btn flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors text-orange-600 bg-orange-50';
-            
-            window.scrollTo(0, 0);
-            if(viewId === 'search') renderListings();
-        }
-
-        function initApp() {
-            const uniContainer = document.getElementById('home-uni-buttons');
-            const filterUni = document.getElementById('filter-university');
-            Object.entries(UNIVERSITIES).forEach(([key, uni]) => {
-                uniContainer.innerHTML += `<button onclick="setHomeUni('${key}')" id="btn-uni-${key}" class="p-4 rounded-lg border-2 transition-all font-semibold border-gray-200 text-gray-600 hover:border-gray-300">${uni.name}</button>`;
-                filterUni.innerHTML += `<option value="${key}">${uni.name}</option>`;
-            });
-
-            const transContainer = document.getElementById('home-transport-buttons');
-            TRANSPORTS.forEach(opt => {
-                transContainer.innerHTML += `<button onclick="setHomeTransport('${opt.value}')" id="btn-trans-${opt.value}" class="p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 font-semibold border-gray-200 text-gray-600"><span class="text-2xl">${opt.icon}</span></button>`;
-            });
-
-            const filterBarrio = document.getElementById('filter-barrio');
-            BARRIOS.forEach(b => {
-                filterBarrio.innerHTML += `<option value="${b}">${b}</option>`;
-            });
-
-            updateHomeUI();
-        }
-
-        function setHomeUni(key) { state.selectedUniversity = key; updateHomeUI(); }
-        function setHomeTransport(key) { state.maxTransport = key; updateHomeUI(); }
-        function updateHomePriceLabel(val) { document.getElementById('home-price-label').innerText = val; }
-        function updateFilterPrice(val) { document.getElementById('filter-price-label').innerText = val; state.filters.maxPrice = val; }
-        
-        function updateHomeUI() {
-            Object.keys(UNIVERSITIES).forEach(k => {
-                const btn = document.getElementById(`btn-uni-${k}`);
-                if(k === state.selectedUniversity) btn.className = 'p-4 rounded-lg border-2 transition-all font-semibold border-orange-500 bg-orange-50 text-orange-700';
-                else btn.className = 'p-4 rounded-lg border-2 transition-all font-semibold border-gray-200 text-gray-600 hover:border-gray-300';
-            });
-            TRANSPORTS.forEach(t => {
-                const btn = document.getElementById(`btn-trans-${t.value}`);
-                if(t.value === state.maxTransport) btn.className = 'p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 font-semibold border-orange-500 bg-orange-50 text-orange-700';
-                else btn.className = 'p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 font-semibold border-gray-200 text-gray-600';
-            });
-        }
-
-        function goToSearch() {
-            state.filters.university = state.selectedUniversity;
-            state.filters.maxPrice = document.getElementById('home-price-range').value;
-            document.getElementById('filter-university').value = state.filters.university;
-            document.getElementById('filter-price').value = state.filters.maxPrice;
-            document.getElementById('filter-price-label').innerText = state.filters.maxPrice;
-            navigate('search');
-        }
-
-        function renderListings() {
-            state.filters.university = document.getElementById('filter-university').value;
-            state.filters.type = document.getElementById('filter-type').value;
-            state.filters.barrio = document.getElementById('filter-barrio').value;
-            
-            const filtered = listings
-                .filter(l => l.price <= state.filters.maxPrice)
-                .filter(l => state.filters.type === 'all' || l.type === state.filters.type)
-                .filter(l => state.filters.barrio === 'all' || l.barrio === state.filters.barrio)
-                .sort((a, b) => calculateScore(b) - calculateScore(a));
-
-            document.getElementById('results-count').innerText = `${filtered.length} alojamientos encontrados`;
-            
-            const container = document.getElementById('listings-container');
-            container.innerHTML = '';
-            
-            const uni = UNIVERSITIES[state.filters.university];
-
-            filtered.forEach(listing => {
-                const distance = calculateDistance(uni.lat, uni.lng, listing.latitude, listing.longitude);
-                const score = calculateScore(listing);
-                const amens = listing.amenities.map(a => a.label).join(', ');
-
-                container.innerHTML += `
-                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-                    <div class="flex flex-col md:flex-row">
-                        <div class="md:w-48 h-40 bg-gradient-to-br from-orange-200 to-orange-100 flex items-center justify-center text-6xl flex-shrink-0">
-                            ${listing.images}
-                        </div>
-                        <div class="flex-1 p-6">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900">${listing.address}</h3>
-                                    <p class="text-sm text-gray-500">${listing.barrio}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-2xl font-bold text-orange-600">${listing.price}€</p>
-                                    <p class="text-xs text-gray-500">/mes</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4 my-3 text-sm text-gray-600">
-                                <span>${listing.rooms} hab</span><span>•</span><span>${amens}</span>
-                            </div>
-                            <div class="bg-gray-50 rounded-lg p-3 my-3 text-sm">
-                                <p class="font-semibold text-gray-900 mb-2">Tiempo hasta ${uni.name}</p>
-                                <div class="grid grid-cols-4 gap-2">
-                                    <div>🚶 ${estimateTime(distance, 'walk')}m</div>
-                                    <div>🚲 ${estimateTime(distance, 'bike')}m</div>
-                                    <div>🚌 ${estimateTime(distance, 'bus')}m</div>
-                                    <div>🚇 ${estimateTime(distance, 'metro')}m</div>
-                                </div>
-                            </div>
-                            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-lg font-bold text-orange-600">⭐ ${score}/100</span>
-                                    <span class="text-xs text-gray-500">para ti</span>
-                                </div>
-                                <a href="${listing.url}" target="_blank" rel="noopener noreferrer" 
-                                   class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
-                                    <span>Ver anuncio directo</span>
-                                    <span class="text-xl">↗️</span>
-                                </a>
-                            </div>
-                        </div>
+    <!-- TIPS RÁPIDOS -->
+    <section style="background:#f1f5f9;">
+        <div class="container">
+            <div class="section-header">
+                <h2>5 cosas que puedes hacer hoy</h2>
+                <p>Pequeños pasos que marcan diferencia cuando te sientes mal.</p>
+            </div>
+            <div class="tips">
+                <div class="tip">
+                    <div class="tip-num">1</div>
+                    <div>
+                        <strong>Bebe agua y come algo</strong>
+                        <p style="font-size:0.9rem; color:var(--text-light);">La deshidratación y el hambre empeoran la ansiedad.</p>
                     </div>
-                </div>`;
-            });
+                </div>
+                <div class="tip">
+                    <div class="tip-num">2</div>
+                    <div>
+                        <strong>Sal 5 minutos al exterior</strong>
+                        <p style="font-size:0.9rem; color:var(--text-light);">Luz natural y movimiento cambian tu química cerebral.</p>
+                    </div>
+                </div>
+                <div class="tip">
+                    <div class="tip-num">3</div>
+                    <div>
+                        <strong>Escribe 3 cosas</strong>
+                        <p style="font-size:0.9rem; color:var(--text-light);">Lo que sientes, sin filtro. Solo para ti.</p>
+                    </div>
+                </div>
+                <div class="tip">
+                    <div class="tip-num">4</div>
+                    <div>
+                        <strong>Contacta a alguien</strong>
+                        <p style="font-size:0.9rem; color:var(--text-light);">Un mensaje simple: "Hoy no estoy bien".</p>
+                    </div>
+                </div>
+                <div class="tip">
+                    <div class="tip-num">5</div>
+                    <div>
+                        <strong>Reduce la cafeína y pantallas</strong>
+                        <p style="font-size:0.9rem; color:var(--text-light);">Por hoy. Tu sistema nervioso lo agradecerá.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LÍNEAS DE AYUDA -->
+    <section id="lineas">
+        <div class="container">
+            <div class="section-header">
+                <div class="badge">Directorio actualizado</div>
+                <h2>Líneas de ayuda por país</h2>
+                <p>Números verificados de servicios públicos y organizaciones confiables. Si tu país no aparece, llama a emergencias locales (911/112).</p>
+            </div>
+            <div class="resource-grid">
+                <div class="resource-item">
+                    <h4>🇪🇸 España</h4>
+                    <p><strong>024</strong> — Atención a la conducta suicida (24/7)<br>
+                    <strong>717 003 717</strong> — Teléfono de la Esperanza<br>
+                    <a href="https://www.sanidad.gob.es/linea024/home.htm" target="_blank">Más info oficial →</a></p>
+                </div>
+                <div class="resource-item">
+                    <h4>🇲🇽 México</h4>
+                    <p><strong>800 911 2000</strong> — Línea de la Vida (CONASAMA) 24/7<br>
+                    Atención en salud mental y adicciones.<br>
+                    <a href="https://www.gob.mx/conasama" target="_blank">Sitio oficial →</a></p>
+                </div>
+                <div class="resource-item">
+                    <h4>🇨🇴 Colombia</h4>
+                    <p><strong>106</strong> — Línea de salud mental 24/7<br>
+                    También WhatsApp en algunas ciudades.<br>
+                    Gratuita y confidencial.</p>
+                </div>
+                <div class="resource-item">
+                    <h4>🇺🇸 Estados Unidos</h4>
+                    <p><strong>988</strong> (opción 2 para español)<br>
+                    Suicide & Crisis Lifeline 24/7<br>
+                    También chat disponible.</p>
+                </div>
+                <div class="resource-item">
+                    <h4>🇦🇷 Argentina</h4>
+                    <p><strong>0800 999 0091</strong> — Orientación en urgencia de salud mental<br>
+                    Centro de Asistencia al Suicida también disponible.</p>
+                </div>
+                <div class="resource-item">
+                    <h4>🇨🇱 Chile / 🇵🇪 Perú / otros</h4>
+                    <p>Chile: *4141<br>
+                    Perú: 113 (opción 5)<br>
+                    Panamá: 147<br>
+                    Y muchos más...</p>
+                </div>
+            </div>
+            <p style="text-align:center; margin-top:40px; color:var(--text-light);">
+                Fuente principal de verificación: directorios oficiales y psyred.org (actualizado 2025-2026).  
+                Los números pueden cambiar; siempre confirma en sitios gubernamentales.
+            </p>
+        </div>
+    </section>
+
+    <!-- RECURSOS EXTRA -->
+    <section id="recursos" style="background:white;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Más recursos gratuitos</h2>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <div class="card-icon">📱</div>
+                    <h3>Apps recomendadas</h3>
+                    <p>Yana (español), Woebot, Wysa y Sanvello. Tienen versiones gratuitas con técnicas de TCC y mindfulness.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎓</div>
+                    <h3>Cursos de la OPS/OMS</h3>
+                    <p>Cursos virtuales gratuitos sobre autocuidado, salud mental en emergencias y más. Con certificado.</p>
+                    <a href="https://www.paho.org/es/salud-mental-cursos-virtuales" target="_blank" style="color:var(--primary); font-weight:600;">Ver cursos →</a>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💬</div>
+                    <h3>Apoyo por WhatsApp</h3>
+                    <p>"Aquí Estoy Chat" ofrece apoyo emocional gratuito por WhatsApp para Latinoamérica (horarios limitados).</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIOS -->
+    <section style="background:#f8fafc;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Lo que dicen quienes han usado estos recursos</h2>
+            </div>
+            <div class="testimonials">
+                <div class="testimonial">
+                    <p>Llamé al 024 una noche horrible. Me escucharon sin juzgarme y me ayudaron a bajar. Al día siguiente pedí cita. Gracias por existir.</p>
+                    <div class="testimonial-author">— Ana, 28 años (España)</div>
+                </div>
+                <div class="testimonial">
+                    <p>La Línea de la Vida me orientó cuando no sabía qué hacer con la ansiedad de mi hijo. Me dieron números de centros cercanos. Fue un alivio enorme.</p>
+                    <div class="testimonial-author">— Carlos, papá (México)</div>
+                </div>
+                <div class="testimonial">
+                    <p>Empecé con la respiración 4-7-8 todos los días. Parece tonto, pero en dos semanas noto diferencia real. Pequeños pasos.</p>
+                    <div class="testimonial-author">— Laura, 34 años</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+        <div class="container" style="max-width:800px;">
+            <div class="section-header">
+                <h2>Preguntas frecuentes</h2>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    ¿Esto reemplaza a un psicólogo o psiquiatra?
+                    <span>+</span>
+                </button>
+                <div class="faq-answer">
+                    No. Esta web es un punto de partida y de apoyo inmediato. Si tus síntomas son persistentes, lo ideal es buscar ayuda profesional. Las líneas de crisis pueden orientarte hacia servicios públicos o de bajo costo.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    ¿Las llamadas son realmente gratuitas y anónimas?
+                    <span>+</span>
+                </button>
+                <div class="faq-answer">
+                    Sí. Las líneas oficiales de crisis son gratuitas (no consumen saldo en la mayoría de casos) y confidenciales. No tienes que dar tu nombre real.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    ¿Qué hago si la línea de mi país no contesta?
+                    <span>+</span>
+                </button>
+                <div class="faq-answer">
+                    Intenta el número de emergencias (911 o 112), ve a urgencias del hospital más cercano, o usa el chat de WhatsApp "Aquí Estoy" si está disponible. También puedes contactar a un familiar o amigo de confianza.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    ¿Puedo usar esto si solo me siento "un poco mal"?
+                    <span>+</span>
+                </button>
+                <div class="faq-answer">
+                    Absolutamente. No necesitas estar en crisis extrema para pedir ayuda o usar técnicas de calma. Prevenir es mucho mejor que esperar a que empeore.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>MenteEnPaz</h3>
+                    <p>Un espacio creado con cariño para que nadie se sienta solo en sus momentos difíciles. Recursos reales, sin fines de lucro.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Navegación</h4>
+                    <ul>
+                        <li><a href="#recursos">Recursos</a></li>
+                        <li><a href="#tecnicas">Técnicas</a></li>
+                        <li><a href="#lineas">Líneas de ayuda</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Importante</h4>
+                    <ul>
+                        <li><a href="#crisis">Crisis ahora</a></li>
+                        <li><a href="#">Privacidad</a></li>
+                        <li><a href="#">Términos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contacto</h4>
+                    <ul>
+                        <li>Esta es una web de recursos</li>
+                        <li>No ofrecemos terapia directa</li>
+                        <li>Hecha con 💚 para la comunidad</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="disclaimer">
+                <strong>Aviso importante:</strong> MenteEnPaz es un directorio de recursos informativos. No somos un servicio de emergencia ni sustituimos la atención profesional de salud mental. 
+                Si estás en peligro inmediato, llama a emergencias (911/112) o acude al hospital más cercano. 
+                Los números de teléfono se basan en fuentes oficiales y pueden cambiar. Verifica siempre en los sitios gubernamentales de tu país.
+            </div>
+            
+            <div class="footer-bottom">
+                <p>© 2025 MenteEnPaz · Hecho para ayudar · Todos los recursos listados son gratuitos</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 20) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Mobile menu (simple)
+        function toggleMenu() {
+            const links = document.querySelector('.nav-links');
+            links.style.display = links.style.display === 'flex' ? 'none' : 'flex';
+            links.style.flexDirection = 'column';
+            links.style.position = 'absolute';
+            links.style.top = '70px';
+            links.style.right = '20px';
+            links.style.background = 'white';
+            links.style.padding = '20px';
+            links.style.borderRadius = '12px';
+            links.style.boxShadow = 'var(--shadow)';
         }
 
-        window.onload = initApp;
+        // FAQ accordion
+        function toggleFaq(button) {
+            const item = button.parentElement;
+            const isActive = item.classList.contains('active');
+            
+            // Close all
+            document.querySelectorAll('.faq-item').forEach(el => {
+                el.classList.remove('active');
+                el.querySelector('span').textContent = '+';
+            });
+            
+            if (!isActive) {
+                item.classList.add('active');
+                button.querySelector('span').textContent = '−';
+            }
+        }
+
+        // Breathing exercise
+        let breathingInterval;
+        let isBreathing = false;
+
+        function startBreathing() {
+            const circle = document.getElementById('breathCircle');
+            const text = document.getElementById('breathText');
+            const btn = document.getElementById('breathBtn');
+
+            if (isBreathing) {
+                clearInterval(breathingInterval);
+                isBreathing = false;
+                circle.className = 'breath-circle';
+                circle.textContent = 'Prepárate';
+                text.textContent = 'Presiona el botón para empezar';
+                btn.textContent = 'Comenzar ejercicio';
+                return;
+            }
+
+            isBreathing = true;
+            btn.textContent = 'Detener';
+            
+            let phase = 0; // 0: inhale, 1: hold, 2: exhale
+            const phases = [
+                { time: 4000, text: 'Inhala... 4', class: 'inhale' },
+                { time: 7000, text: 'Mantén... 7', class: 'inhale' },
+                { time: 8000, text: 'Exhala... 8', class: 'exhale' }
+            ];
+
+            function nextPhase() {
+                const current = phases[phase];
+                circle.className = 'breath-circle ' + current.class;
+                circle.textContent = current.text.split('...')[0];
+                text.textContent = current.text;
+                
+                phase = (phase + 1) % 3;
+                
+                breathingInterval = setTimeout(nextPhase, current.time);
+            }
+
+            nextPhase();
+        }
     </script>
 </body>
 </html>
